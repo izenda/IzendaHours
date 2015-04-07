@@ -1,0 +1,4 @@
+﻿@model DateTime?
+
+@Html.TextBox("", (Model.HasValue ? Model.Value.ToString("MM/DD/YYYY") : DateTime.Now.ToShortDateString()),
+  new { @class = "datefield", type = "date" })

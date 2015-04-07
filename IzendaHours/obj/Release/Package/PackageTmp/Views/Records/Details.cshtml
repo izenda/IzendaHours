@@ -1,0 +1,82 @@
+﻿@model IzendaHours.Models.Record
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Record</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.EmployeeId)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.EmployeeId)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.RecordDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.RecordDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Project.Project1)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Project.Project1)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Task.Task1)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Task.Task1)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CaseNo)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CaseNo)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Hours)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Hours)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.WikiLink)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.WikiLink)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Notes)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Notes)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.EntryId }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>
