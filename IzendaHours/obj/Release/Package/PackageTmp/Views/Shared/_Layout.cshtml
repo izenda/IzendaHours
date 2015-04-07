@@ -4,11 +4,12 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="~/report-icon.png" type='image/png' />
     <title>Izenda Engineering</title>
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
+    <link rel="stylesheet" type="text/css" href="~/Content/Custom.css">
 
+    <link rel="shortcut icon" href="~/favicon.ico">
 
     <meta name="description" content="A timesheet application for the Izenda Engineering team" />
 </head>
@@ -21,15 +22,29 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
+                @*<div class="container-fluid">
+                        <div class="navbar-header">
+                            <a class="navbar-brand" href="#">
+                                <img alt="Brand" class="img-responsive" src="~/Resources/IzendaNewLogoBlue.png">
+                            </a>
+                        </div>
+                    </div>*@
+                @if (User.Identity.IsAuthenticated)
+                {
+                    @Html.ActionLink("Izenda Hours Sheet", "Welcome", "Records", new { area = "" }, new { @class = "navbar-brand" })
+                }
+                else { 
                 @Html.ActionLink("Izenda Hours Sheet", "Index", "Records", new { area = "" }, new { @class = "navbar-brand" })
+                }
             </div>
             <div class="navbar-collapse collapse">
-                @if (User.Identity.IsAuthenticated) { 
-                <ul class="nav navbar-nav">
-                    <li>@Html.ActionLink("Timesheet", "Index", "Records")</li>
-                    <li>@Html.ActionLink("Record", "Create", "Records")</li>
-                    <li>@Html.ActionLink("Reporting", "Reporting", "Records")</li>
-                </ul>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <ul class="nav navbar-nav">
+                        <li>@Html.ActionLink("Timesheet", "Index", "Records")</li>
+                        <li>@Html.ActionLink("Record", "Create", "Records")</li>
+                        <li>@Html.ActionLink("Reporting", "Reporting", "Records")</li>
+                    </ul>
                 }
                 @Html.Partial("_LoginPartial")
             </div>
@@ -47,19 +62,32 @@
     @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)
     <!-- DataTables CSS -->
-    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.5/css/jquery.dataTables.css">
+    @*<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.5/css/jquery.dataTables.css">*@
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/plug-ins/1.10.6/integration/bootstrap/3/dataTables.bootstrap.css">
 
     <!-- DataTables -->
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.5/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/plug-ins/1.10.6/integration/bootstrap/3/dataTables.bootstrap.js"></script>
 
     <script type="text/javascript">
-    $(document).ready(function () {
-        $('#timeTable').DataTable();
-    });
+        $(document).ready(function () {
+            $('#timeTable').DataTable();
+        });
     </script>
     <script type="text/javascript">
-    $(document).ready(function () {
-        $('#projectTable').DataTable();
+        $(document).ready(function () {
+            $('#projectTable').DataTable();
+        });
+    </script>
+    <script type="text/javascript">
+    var jumboHeight = $('.jumbotron').outerHeight();
+    function parallax() {
+        var scrolled = $(window).scrollTop();
+        $('.bg').css('height', (jumboHeight - scrolled) + 'px');
+    }
+
+    $(window).scroll(function (e) {
+        parallax();
     });
     </script>
 </body>

@@ -52,4 +52,3 @@ c:\users\shahe_000\documents\visual studio 2013\Projects\IzendaHours\IzendaHours
 c:\users\shahe_000\documents\visual studio 2013\Projects\IzendaHours\IzendaHours\bin\Microsoft.Owin.Security.MicrosoftAccount.xml
 c:\users\shahe_000\documents\visual studio 2013\Projects\IzendaHours\IzendaHours\obj\Debug\IzendaHours.dll
 c:\users\shahe_000\documents\visual studio 2013\Projects\IzendaHours\IzendaHours\obj\Debug\IzendaHours.pdb
-C:\Users\shahe_000\Documents\Visual Studio 2013\Projects\IzendaHours\IzendaHours\obj\Debug\IzendaHours.csprojResolveAssemblyReference.cache

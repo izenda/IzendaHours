@@ -79,7 +79,7 @@ namespace IzendaHours.Controllers
             switch (result)
             {
                 case SignInStatus.Success:
-                    return RedirectToLocal(returnUrl);
+                    return RedirectToAction("Welcome", "Records");
                 case SignInStatus.LockedOut:
                     return View("Lockout");
                 case SignInStatus.RequiresVerification:
@@ -164,7 +164,7 @@ namespace IzendaHours.Controllers
                      //await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking <a href=\"" + callbackUrl + "\">here</a>");
 
                      //return View("DisplayEmail");
-                    return RedirectToAction("Index", "Records");
+                    return RedirectToAction("Welcome", "Records");
                 }
                 AddErrors(result);
             }
