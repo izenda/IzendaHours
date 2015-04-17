@@ -1,7 +1,7 @@
 ﻿@{
     ViewBag.Title = "Welcome";
 }
-
+<script type="text/javascript" src="/../../Reporting/rs.aspx?js=report-parts"></script>
 <div class="bg"></div>
 <div class="jumbotron">
     <h1>A New Unified Hours Sheet...</h1>
@@ -10,18 +10,16 @@
 
 <div class="row">
     <div class="col-md-4">
-        <h2>Getting started</h2>
-        <p>
-            After logging in, you will see a list of recent entries into the database for your time.  Choose "Create New" to create a new record, or you can edit/delete previous records.
-        </p>
+        <h2>Izenda is Integrated!</h2>
+        <p>The Reporting tab now has an integrated instance of Izenda, complete with a connection to the IzendaHours database.</p>
     </div>
     <div class="col-md-4">
-        <h2>See your hours</h2>
-        <p>The Reporting tab contains an Izenda reporting instance to help you track your hours.  We're making data sexy.</p>
+        <h2>Build Reports</h2>
+        <p>Those who go and build awesome reports to show off our hours - especially with charts I can put here - will get a treat.  I hate building reports.</p>
     </div>
     <div class="col-md-4">
-        <h2>Integrate Izenda</h2>
-        <p>Who wants to see report parts here for your hours?  I do...</p>
+        <h2>Report Parts!</h2>
+        <div class="report-part" data-report="WeeklyHours" data-part="chart" data-responseserverpath="/Reporting/rs.aspx"></div>
     </div>
 </div>
 

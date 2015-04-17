@@ -1,4 +1,4 @@
 ﻿@model DateTime?
 
-@Html.TextBox("", (Model.HasValue ? Model.Value.ToString("MM/DD/YYYY") : DateTime.Now.ToString("yyyy-MM-dd")),
+@Html.TextBox("", (Model.HasValue ? Model.Value.ToString("yyyy-MM-dd") : DateTime.Now.ToString("yyyy-MM-dd")),
   new { @class = "datefield", type = "date" })

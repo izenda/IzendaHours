@@ -8,7 +8,8 @@
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
     <link rel="stylesheet" type="text/css" href="~/Content/Custom.css">
-
+    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.0/themes/base/jquery-ui.css" rel="stylesheet" type="text/css" />
+    
     <link rel="shortcut icon" href="~/favicon.ico">
 
     <meta name="description" content="A timesheet application for the Izenda Engineering team" />
@@ -43,7 +44,7 @@
                     <ul class="nav navbar-nav">
                         <li>@Html.ActionLink("Timesheet", "Index", "Records")</li>
                         <li>@Html.ActionLink("Record", "Create", "Records")</li>
-                        <li>@Html.ActionLink("Reporting", "Reporting", "Records")</li>
+                        <li>@Html.ActionLink("Reporting", "ReportList", "Reporting")</li>
                     </ul>
                 }
                 @Html.Partial("_LoginPartial")
@@ -61,6 +62,7 @@
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
     <!-- DataTables CSS -->
     @*<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.5/css/jquery.dataTables.css">*@
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/plug-ins/1.10.6/integration/bootstrap/3/dataTables.bootstrap.css">
@@ -68,10 +70,69 @@
     <!-- DataTables -->
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.5/js/jquery.dataTables.js"></script>
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/plug-ins/1.10.6/integration/bootstrap/3/dataTables.bootstrap.js"></script>
+    <script type="text/javascript" charset="utf-8" src="//cdn.datatables.net/plug-ins/1.10.6/api/sum().js"></script>
+    <script type="text/javascript" src="~/Scripts/jquery.dataTables.columnFilter.js"></script>
+    
 
     <script type="text/javascript">
-        $(document).ready(function () {
-            $('#timeTable').DataTable();
+        $("#timeTable").each( function () {
+            $(this).dataTable({
+                "aaSorting": [[0, 'desc']],
+                "stateSave": true,
+                "stateDuration": -1,
+                "footerCallback": function (row, data, start, end, display) {
+                    var api = this.api(), data;
+
+                    // Remove the formatting to get integer data for summation
+                    var intVal = function (i) {
+                        return typeof i === 'string' ?
+                            i.replace(/[\$,]/g, '') * 1 :
+                            typeof i === 'number' ?
+                            i : 0;
+                    };
+
+                    // Total over all pages
+                    total = api
+                        .column(4)
+                        .data()
+                        .reduce(function (a, b) {
+                            return intVal(a) + intVal(b);
+                        });
+
+                    // Total over this page
+                    pageTotal = api
+                        .column(4, { page: 'current' })
+                        .data()
+                        .reduce(function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0);
+
+                    // Update footer
+                    $(api.column(4).footer()).html(
+                        pageTotal + ' hours'
+                    );
+                }
+            })
+            .columnFilter({
+                //sPlaceHolder: "head:before",
+                "bLengthChange": true,
+                "sDom": "lrtip",
+                "bAutoWidth": true, "sScrollY": "400px", "bPaginate": true, "bUseColVis": true, "bScrollCollapse": true, aoColumns: [{
+                    type: "date-range"
+                    
+                },
+                            {
+                                type: "select"
+                              
+                            },
+                            {
+                                type: "select"
+
+                            }
+                ]
+
+            });
+
         });
     </script>
     <script type="text/javascript">
