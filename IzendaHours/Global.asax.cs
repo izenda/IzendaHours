@@ -94,8 +94,13 @@ namespace IzendaHours
         }
         public class MvcApplication : System.Web.HttpApplication
         {
+            void Application_AcquireRequestState(object sender, EventArgs e)
+            {
+                IzendaHours.CustomAdHocConfig.InitializeReporting();
+            }
             protected void Application_Start()
             {
+
                 RouteTable.Routes.MapPageRoute("rs.aspx", "{*aspx}", "~/Reporting/rs.aspx", false, null, new RouteValueDictionary { { "aspx", new SpecificFileRouterConstraint("aspx", "rs.aspx") } });
                 AreaRegistration.RegisterAllAreas();
                         GlobalConfiguration.Configure(WebApiConfig.Register);
