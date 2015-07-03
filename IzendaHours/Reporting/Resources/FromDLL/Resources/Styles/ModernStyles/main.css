@@ -146,7 +146,7 @@ th, td {
 /* Links */
 a:link {
   color: #0000ff;
-  /*text-decoration: underline;*/
+  text-decoration: underline;
 }
 :visited {
   color: #6b19a8;

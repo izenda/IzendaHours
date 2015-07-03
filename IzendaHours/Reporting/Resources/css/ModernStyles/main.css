@@ -146,7 +146,7 @@ th, td {
 /* Links */
 a:link {
   color: #0000ff;
-  
+  text-decoration: underline;
 }
 :visited {
   color: #6b19a8;
@@ -211,7 +211,6 @@ a span.plus {
 }
 .report-page, .report-list-page {
   position: relative;
-  padding-top: 45px;
 }
 
 .header {
@@ -298,7 +297,6 @@ a span.plus {
 }
 .main-content .page {
   margin-bottom: 36px;
-  padding-top: 75px;
 }
 .main-content .page p {
   margin: 1.5em 0;
@@ -545,7 +543,7 @@ tr.ReportFooter td {
 
 .left-panel {
   margin: 0;
-  padding-top: 25px;
+  padding-top: 16px;
   padding-bottom: 10em;
   /*min-width: 220px;*/
 }
@@ -604,7 +602,6 @@ tr.ReportFooter td {
   max-width: 170px;
   margin: 24px;
   vertical-align: top;
-  /*box-shadow: 10px 10px 5px #888888;*/
 }
 
 .report-list-icon {
@@ -637,7 +634,6 @@ tr.ReportFooter td {
 .iz-ui-tabs-panel div.thumb:hover {
   outline: 8px solid #cddbf6;
   background-color: #cddbf6;
-  box-shadow: 10px 10px 5px #888888;
 }
 .iz-ui-tabs-panel div.thumb .thumb-buttons {
   display: none;
@@ -707,7 +703,8 @@ tr.ReportFooter td {
 .iz-ui-tabs-panel div.thumb:hover div.thumb-title {
 }
 
-
+#reportListDiv {
+}
 
 
 
@@ -804,7 +801,7 @@ tr.ReportFooter td {
   opacity: .75;
 }
 .ui-tabs-panel div.thumb:hover .thumb-remove {
-  background-image: url(###RS###image=ModernImages.remove-icon.png);
+  background-image: url(rs.aspx?image=ModernImages.remove-icon.png);
 }
 .ui-tabs-panel div.thumb:hover .thumb-edit {
   background-image: url(rs.aspx?image=ModernImages.edit-icon.png);
@@ -843,7 +840,6 @@ tr.ReportFooter td {
 }
 
 #reportListDiv {
-    padding-top: 25px
 }
 
 
@@ -909,7 +905,7 @@ tr.ReportFooter td {
   padding-top: 0;
 }
 .yaselect-current {
-  background: url("###RS###image=ModernImages.select-arrows.png") no-repeat 100% 50%;
+  background: url("rs.aspx?image=ModernImages.select-arrows.png") no-repeat 100% 50%;
   text-indent: 4px;
   white-space: nowrap;
 }

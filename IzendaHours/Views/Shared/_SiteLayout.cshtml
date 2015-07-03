@@ -20,34 +20,43 @@
     <link rel="stylesheet" href="~/Reporting/Resources/css/ModernStyles/fun.css" type="text/css" />
     <link rel="stylesheet" href="~/Reporting/Resources/css/ModernStyles/main.css" type="text/css" />
     
-   
-    
-
     <link rel="shortcut icon" href="~/Reporting/Resources/FromDLL/Resources/ModernImages/report-icon.png" type='image/png' />
-    <script type="text/javascript" src="./rs.aspx?js=ModernScripts.jquery-1.7.2.min"></script>
+    
+    @if (IsSectionDefined("changeableheader"))
+    {
+        @RenderSection("changeableheader");
+    }
+    else
+    {
+        <link rel="stylesheet" type="text/css" href="./rs.aspx?css=ModernStyles.bootstrap-responsive" />
+        <link rel="stylesheet" type="text/css" href="./rs.aspx?css=ModernStyles.bootstrap" />
+        <link rel="stylesheet" type="text/css" href="./rs.aspx?css=ModernStyles.bootstrap-modals" />
+        <link rel="stylesheet" type="text/css" href="./rs.aspx?css=ModernStyles.bootstrap-override" />
+        <script type="text/javascript" src="./rs.aspx?js=ModernScripts.jquery-1.7.2.min"></script>
+    }
     <script type="text/javascript" src="~/Reporting/Resources/js/main.js"></script>
-    <link href="./rs.aspx?css=ModernStyles.bootstrap-responsive" rel="stylesheet" />
-    <link href="./rs.aspx?css=ModernStyles.bootstrap" rel="stylesheet" />
-    <link href="./rs.aspx?css=ModernStyles.bootstrap-modals" rel="stylesheet" />
-    <link href="./rs.aspx?css=ModernStyles.bootstrap-override" rel="stylesheet" />
     @*<script type="text/javascript" src="./rs.aspx?js=ModernScripts.bootstrap-dropdown"></script>*@
     <script type="text/javascript" src="./rs.aspx?js=ModernScripts.bootstrap-tab"></script>
     <script type="text/javascript" src="./rs.aspx?js=ModernScripts.bootstrap-transition"></script>
     <script type="text/javascript" src="./rs.aspx?js=ModernScripts.bootstrap-modal"></script>
     
     <link rel="stylesheet" type="text/css" href="~/Content/Custom.css" />
-   
 
     @if (IsSectionDefined("header"))
     {
         @RenderSection("header")
     }
-
-    @{if (HttpContext.Current != null && HttpContext.Current.Request != null && HttpContext.Current.Session != null) { Izenda.AdHoc.Utility.CheckLimitations(true); }}
-
+    @if (!Izenda.AdHoc.AdHocSettings.ShowDesignLinks)
+    {
+      string script = "<script type=\"text/javascript\" language=\"javascript\">";
+          script += "try { $(document).ready(function() {$('.designer-only').hide(); });}catch(e){}";
+          script += " try{ jq$(document).ready(function() {jq$('.designer-only').hide(); });}catch(e){} ";
+          script += "</script>";
+        @Html.Raw(script);
+    }
 </head>
 
-<body style="margin:0; padding:0;">
+<body style="margin:0; padding-top:65px;">
 
     @*<div class="layout">
         <div class="header applyStyles" id="whiteHeader">
@@ -116,11 +125,11 @@
                         <li>@Html.ActionLink("Reports", "ReportList", "Reporting")</li>
                         <li>@Html.ActionLink("Dashboards", "Dashboards", "Reporting")</li>
                         <li class="dropdown">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#">New<b class="caret"></b></a>
+                            <a class="dropdown-toggle" data-toggle="dropdown" href='@Url.Action("ReportDesigner", "Reporting", new { clear = 1, tab = "Data+Sources" })'>New<b class="caret"></b></a>
                             <ul class="dropdown-menu" role="menu">
-                                <li>@Html.ActionLink("Report", "ReportDesigner", "Reporting")</li>
+                                <li>@Html.ActionLink("Report", "ReportDesigner", "Reporting", new { clear = 1, tab = "Data+Sources" }, null)</li>
                                 @*<li>@Html.ActionLink("Instant Report", "InstantReport", "Reporting")</li>*@
-                                <li>@Html.ActionLink("Dashboard", "DashboardDesigner", "Reporting")</li>
+                                <li>@Html.ActionLink("Dashboard", "Dash", "Reporting")</li>
                             </ul>
                         </li>
                     </ul>

@@ -1,7 +1,7 @@
 ﻿<%@ Control AutoEventWireup="true" %>
 
 <!-- Styles Resources -->
-<link rel="stylesheet" type="text/css" href="../Reporting/Resources/css/Filters.css" />
+<link rel="stylesheet" type="text/css" href="./Resources/css/Filters.css" />
 
 <!-- Styles Internal -->
 <link rel="stylesheet" type="text/css" href="rs.aspx?css=jQuery" />
@@ -19,6 +19,6 @@
 <script type="text/javascript" src="./rs.aspx?js=AdHocServer"></script>
 <script type="text/javascript" src="./rs.aspx?js_nocache=ModernScripts.IzendaLocalization"></script>
 
-<script type="text/javascript" src="../Reporting/Resources/js/ReportList.js"></script>
+<script type="text/javascript" src="./Resources/js/ReportList.js"></script>
 
    

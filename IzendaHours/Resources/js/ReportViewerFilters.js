@@ -146,7 +146,7 @@ function CommitFiltersData(updateReportSet) {
 
 	var cmd = 'setfiltersdata';
 	if (!updateReportSet)
-		cmd = 'refreshcascadingfilters';
+	  cmd = 'refreshcascadingfilters';
 	var requestString = 'wscmd=' + cmd + '&wsarg0=' + encodeURIComponent(JSON.stringify(dataToCommit));
 	// Instant Report handling
 	if (typeof nirConfig != 'undefined' && nirConfig != null && typeof dataSources != 'undefined' && dataSources != null) {
@@ -419,7 +419,7 @@ function RefreshFilters(returnObj) {
 		labelDiv.style.width = labelDiv.clientWidth + 'px';
 		labelDiv.innerHTML = controlsIds[index].filterDesc;
 	}
-	if (typeof switchTabAfterRefreshCycle != 'undefined' && switchTabAfterRefreshCycle) {
+	if (typeof (switchTabAfterRefreshCycle) === 'boolean' && switchTabAfterRefreshCycle) {
 		switchTabAfterRefreshCycle = false;
 		if (!jq$(document.getElementById('tab1')).hasClass('active'))
 			document.getElementById('tab1a').click();
@@ -626,7 +626,8 @@ function ShowEqualsPopupDialog(filterInd) {
 }
 
 function GenerateFilterControl(index, cType, value, values, existingLabels, existingValues, isLastFilter) {
-	var onChangeCmd = isLastFilter ? '' : 'onchange="CommitFiltersData(false);"';
+	var notRefreshFilters = isLastFilter || nrvConfig && nrvConfig.CascadeFilterValues == false;
+	var onChangeCmd = notRefreshFilters ? '' : 'onchange="CommitFiltersData(false);"';
 	//var onKeyUpCmd = 'onkeyup="CommitFiltersData(false);"';
 	var onKeyUpCmd = '';
 	var result = '';
@@ -640,12 +641,21 @@ function GenerateFilterControl(index, cType, value, values, existingLabels, exis
 			break;
 		case 3:
 			result += '<select style="width:100%;" id="ndbfc' + index + '" ' + onChangeCmd + '>';
+			var groupOpened = false;
 			for (var cnt3 = 0; cnt3 < existingValues.length; cnt3++) {
 				var selected3 = '';
 				if (existingValues[cnt3] == value)
 					selected3 = 'selected="selected"';
-				result += '<option value="' + existingValues[cnt3].replace(/"/g, '&quot;') + '" ' + selected3 + '>' + existingLabels[cnt3] + '</option>';
+				if (existingValues[cnt3] == null) {
+					if (groupOpened)
+						result += '</optgroup>';
+					result += '<optgroup label="' + existingLabels[cnt3] + '">';
+					groupOpened = true;
+				} else
+					result += '<option value="' + existingValues[cnt3].replace(/"/g, '&quot;') + '" ' + selected3 + '>' + existingLabels[cnt3] + '</option>';
 			}
+			if (groupOpened)
+				result += '</optgroup>';
 			result += '</select>';
 			break;
 		case 4:
@@ -659,7 +669,7 @@ function GenerateFilterControl(index, cType, value, values, existingLabels, exis
 			result += '</select>';
 			break;
 		case 5:
-			onChangeCmd = 'onchange="setTimeout(function(){CommitFiltersData(false);},401);"';
+			onChangeCmd = notRefreshFilters ? '' : 'onchange="setTimeout(function(){CommitFiltersData(false);},401);"';
 			result += '<input type="text" ' + onChangeCmd + ' value="' + values[0].replaceAll('"', "&quot;") + '" style="width:248px" id="ndbfc' + index + '_1" />';
 			calendars[calendars.length] = 'ndbfc' + index + '_1';
 			result += '<img onclick="javascript: if (showingC) {return;} showingC = true; setTimeout(function() {document.getElementById(\'ndbfc' + index + '_1\').focus(); setTimeout(function(){showingC = false;jq$(\'#iz-ui-datepicker-div\').css(\'z-index\', \'2000\');}, 500);}, 500); " style="cursor:pointer;position:relative;top:4px;" src="' + urlSettings.urlRsPage + '?image=calendar_icon.png">';
@@ -691,7 +701,7 @@ function GenerateFilterControl(index, cType, value, values, existingLabels, exis
 			result += '</div>';
 			break;
 		case 9:
-			onChangeCmd = 'onchange="setTimeout(function(){CommitFiltersData(false);},401);"';
+			onChangeCmd = notRefreshFilters ? '' : 'onchange="setTimeout(function(){CommitFiltersData(false);},401);"';
 			result += '<input type="text" ' + onChangeCmd + ' value="' + value.replaceAll('"', "&quot;") + '" style="width:248px" id="ndbfc' + index + '" />';
 			calendars[calendars.length] = 'ndbfc' + index;
 			result += '<img onclick="javascript: if (showingC) {return;} showingC = true; setTimeout(function() {document.getElementById(\'ndbfc' + index + '\').focus(); setTimeout(function(){showingC = false;jq$(\'#iz-ui-datepicker-div\').css(\'z-index\', \'2000\');}, 500);}, 500); " style="cursor:pointer;position:relative;top:4px;" src="rs.aspx?image=calendar_icon.png">';

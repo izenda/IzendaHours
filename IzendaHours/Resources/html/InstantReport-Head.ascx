@@ -8,7 +8,7 @@
 <link rel="stylesheet" type="text/css" href="rs.aspx?css=jQuery" />
 <link rel="stylesheet" type="text/css" href="rs.aspx?css=ModernStyles.jquery-ui" /> 
 <link rel="stylesheet" type="text/css" href="rs.aspx?css=ModalDialogStyle" />
-<link rel="stylesheet" type="text/css" href="../Reporting/Resources/css/ModernStyles/jquery.dataTables.css" />
+<link rel="stylesheet" type="text/css" href="Resources/css/ModernStyles/jquery.dataTables.css" />
 
 <!-- jQuery Core -->
 <script type="text/javascript" src="rs.aspx?js=jQuery.jq"></script>
@@ -34,12 +34,12 @@
 <script type="text/javascript" src="rs.aspx?js=ReportScripting"></script>
 
 <!-- Utils Resources -->
-<script type="text/javascript" src="../Reporting/Resources/js/ReportViewerFilters.js"></script>
-<script type="text/javascript" src="../Reporting/Resources/js/FieldProperties.js"></script>
-<script type="text/javascript" src="../Reporting/Resources/js/charts.js"></script>
-<script type="text/javascript" src="../Reporting/Resources/js/datasources-search.js"></script>
-<script type="text/javascript" src="../Reporting/Resources/js/data-sources.js"></script>
-<script type="text/javascript" src="../Reporting/Resources/js/data-sources-preview.js"></script>
+<script type="text/javascript" src="./Resources/js/ReportViewerFilters.js"></script>
+<script type="text/javascript" src="./Resources/js/FieldProperties.js"></script>
+<script type="text/javascript" src="./Resources/js/charts.js"></script>
+<script type="text/javascript" src="./Resources/js/datasources-search.js"></script>
+<script type="text/javascript" src="./Resources/js/data-sources.js"></script>
+<script type="text/javascript" src="./Resources/js/data-sources-preview.js"></script>
 
 
 <script type="text/javascript">

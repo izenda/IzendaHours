@@ -17,6 +17,7 @@ namespace IzendaHours.Controllers
         private IzendaHoursEntities db = new IzendaHoursEntities();
 
         // GET: Records
+        [Authorize]
         public ActionResult Index()
         {
             if (User.Identity.IsAuthenticated)
@@ -25,16 +26,17 @@ namespace IzendaHours.Controllers
                 var name = email.Split('.');
                 var firstName = name[0];
                 var records = db.Records.Include(r => r.Project).Include(r => r.Task);
-                //if (User.Identity.GetUserName() == "adminuser")
-                //{
-                //    return View(records.ToList());
-                //}
+                if (User.Identity.GetUserName() == "admin")
+                {
+                   return View(records.ToList());
+                }
                 return View(records.ToList().Where(user => user.EmployeeId.Contains(firstName.First().ToString().ToUpper() + firstName.Substring(1))));
             }
             return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
         }
 
         // GET: Records/Details/5
+        [Authorize]
         public ActionResult Details(int? id)
         {
             if (id == null)
@@ -50,11 +52,12 @@ namespace IzendaHours.Controllers
         }
 
         // GET: Records/Create
+        [Authorize]
         public ActionResult Create()
         {
             if (User.Identity.IsAuthenticated)
             {
-                ViewBag.ProjectId = new SelectList(db.Projects, "ProjectId", "Project1");
+                ViewBag.ProjectId = new SelectList(db.Projects.OrderBy(model => model.Project1), "ProjectId", "Project1");
                 ViewBag.TaskId = new SelectList(db.Tasks, "TaskId", "Task1");
                 return View();
             }
@@ -86,6 +89,7 @@ namespace IzendaHours.Controllers
         }
 
         // GET: Records/Edit/5
+        [Authorize]
         public ActionResult Edit(int? id)
         {
             if (id == null)
@@ -97,8 +101,8 @@ namespace IzendaHours.Controllers
             {
                 return HttpNotFound();
             }
-            
-            ViewBag.ProjectId = new SelectList(db.Projects, "ProjectId", "Project1", record.ProjectId);
+
+            ViewBag.ProjectId = new SelectList(db.Projects.OrderBy(model => model.Project1), "ProjectId", "Project1", record.ProjectId);
             ViewBag.TaskId = new SelectList(db.Tasks, "TaskId", "Task1", record.TaskId);
             return View(record);
         }
@@ -128,6 +132,7 @@ namespace IzendaHours.Controllers
         }
 
         // GET: Records/Delete/5
+        [Authorize]
         public ActionResult Delete(int? id)
         {
             if (id == null)
@@ -143,6 +148,7 @@ namespace IzendaHours.Controllers
         }
 
         // GET: Records/Reporting
+        [Authorize]
         public ActionResult Reporting()
         {
             if (User.Identity.IsAuthenticated)
@@ -163,6 +169,7 @@ namespace IzendaHours.Controllers
             return RedirectToAction("Index");
         }
 
+        [Authorize]
         public ActionResult Welcome()
         {
             return View();

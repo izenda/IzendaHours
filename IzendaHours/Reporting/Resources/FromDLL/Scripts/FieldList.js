@@ -177,7 +177,7 @@ function SC_GetFieldsList(id, columnName, functionName)
 		var funcSelect = EBC_GetSelectByName(body.rows[i], functionName);
 		var descriptionEdit = EBC_GetInputByName(body.rows[i], 'Description');
 		var operationElem = new AdHoc.MultivaluedCheckBox('ArithmeticOperation', body.rows[i]);
-		var coefficientEdit = EBC_GetInputByName(body.rows[i], 'Coefficient');
+		var coefficientEdit = EBC_TextAreaByName(body.rows[i], 'Coefficient');
 		if (columnSel != null)
 		{
 			var columnSelValue = columnSel.value;
@@ -557,6 +557,8 @@ function SC_OnColumnChangedHandler(e, el)
 			SC_SetAcceptableValues(row, operationElem);
 			parentTable.skipAutogrouping = savedAutogrouping;
 		}
+
+		EBC_SetDescription(row);
 	}
 }
 
@@ -1588,6 +1590,7 @@ function SC_AfterArithmeticOperationChanged(e)
 	}
 	var id = EBC_GetParentTable(row).id;
 	SC_CheckGroupingAndFunctions(id);
+	SC_CallOnColumnFunctionChangeHandlers(id);
 }
 
 function SC_OnVisualGroupsCheckedHandler(e)
@@ -1671,7 +1674,6 @@ function SC_CheckPropertiesModified(dialogRow)
 						element = element.rows[0].cells[0].firstChild;
 						tagName = element.nodeName;
 						elType = element.getAttribute("type");
-						
 					}
 					switch (tagName)
 					{
@@ -1683,8 +1685,9 @@ function SC_CheckPropertiesModified(dialogRow)
 										{
 											var value = element.value;
 											var name = element.getAttribute("name");
-											if (name != null && value == "1" && (name.indexOf("_Coefficient")+12 == name.length))
+											if (name != null && value == "1" && (name.indexOf("_Coefficient") + 12 == name.length)) {
 												value = "";
+											}
 											result = !(value == null || value == "" || (value.indexOf("example") == 0));
 										}
 										break;
@@ -1710,6 +1713,26 @@ function SC_CheckPropertiesModified(dialogRow)
 								result = !(value == null || value == "" || value == "..." || (value == "DEFAULT") || (value.indexOf("example") == 0));
 							}
 							break;
+						case "DIV":
+							{
+								var childNode = element.firstChild;
+								if (childNode.nodeName == "INPUT") {
+									var cnName = childNode.getAttribute("name");
+									if (cnName.indexOf('_LabelJustificationCurrentValue') >= 0) {
+										result = (childNode.value != 'M');
+									}
+									else if (cnName.indexOf('_JustificationCurrentValue') >= 0) {
+										result = (childNode.value != ' ' && childNode.value != String.fromCharCode(160));
+									}
+								}
+							}
+							break;
+						case "TEXTAREA":
+							{
+								var value = element.value;
+								result = !(value == null || value == "" || (value.indexOf("example") == 0));
+							}
+							break;
 					}
 				}
 			}
@@ -1732,33 +1755,21 @@ function SC_HideProperties(id)
 	HideDialog(sc_propsTable, false);
 	var row = EBC_GetRow(sc_propsTable);
 	SC_CheckPropertiesModified(row);
-	//SC_CheckTotalsIsUsed(id);
+	SC_CallOnColumnFunctionChangeHandlers(id);
 }
 
 function SC_SubtotalFunctionChange(obj)
 {
-	var table = EBC_GetParentTable(obj);
-	var expressionEdit = EBC_GetElementByName(table, "SubtotalExpression", "INPUT")
-	if (expressionEdit!=null)
-	{
-		var option = obj.options[obj.selectedIndex];
-		var sqlTemplate = option.getAttribute("sqltemplate")
-		if (sqlTemplate!=null && sqlTemplate!="")
-		{
-			var columnSelect = EBC_GetSelectByName(dialogRow, 'Column');
-			if (columnSelect!=null && columnSelect.value!=null && columnSelect.value!="")
-				expressionEdit.value = sqlTemplate.replace("{0}", columnSelect.value);
+	var table = jq$(obj).closest('table[name$="PropertiesTable"]');
+	if (table != null && table.length > 0) {
+		var expressionEdit = table.find('textarea[name$="SubtotalExpression"]');
+		if (expressionEdit != null && expressionEdit.length > 0) {
+			if (jq$(obj).val() == "EXPRESSION")
+				expressionEdit.closest('tr').show();
+			else
+				expressionEdit.closest('tr').hide();
 		}
 	}
-}
-
-function SC_SubtotalExpressionActivate(obj) {
-	var table = EBC_GetParentTable(obj);
-	var sutotalSel = EBC_GetSelectByName(table, "SubtotalFunction");
-	var save = sutotalSel.onchange;
-	sutotalSel.onchange = null;
-	sutotalSel.value = "EXPRESSION";
-	sutotalSel.onchange = save;
 }
 
 function SC_ShowExtraColumns(id)

@@ -12,12 +12,16 @@ using System.Reflection;
 
 namespace IzendaHours.Controllers {
   public class ReportingController : Controller {
+
+    [Authorize]
     [ValidateInput(false)]
     public ActionResult ReportDesigner() {
-
+        
 
       return View();
     }
+
+    [Authorize]
     [ValidateInput(false)]
     public ActionResult ReportList() {
 
@@ -27,16 +31,29 @@ namespace IzendaHours.Controllers {
       //}
       return View();
     }
+
+    [Authorize]
     [ValidateInput(false)]
     public ActionResult Settings() {
       return View();
     }
+
+    [Authorize]
+    [ValidateInput(false)]
+    public ActionResult Dash()
+    {
+        return View();
+    }
+
+    [Authorize]
     [ValidateInput(false)]
     public ActionResult Dashboards() {
 
 
       return View();
     }
+
+    [Authorize]
     [ValidateInput(false)]
     public ActionResult ReportViewer() {
 
@@ -44,12 +61,16 @@ namespace IzendaHours.Controllers {
       AdHocSettings.ShowSimpleModeViewer = true;
       return View();
     }
+
+    [Authorize]
     [ValidateInput(false)]
     public ActionResult InstantReport() {
 
 
       return View();
     }
+
+    [Authorize]  
     [ValidateInput(false)]
     public ActionResult DashboardDesigner() {
 

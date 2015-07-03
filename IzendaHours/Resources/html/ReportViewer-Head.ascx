@@ -3,8 +3,8 @@
 <title>Report viewer</title>
 
 <!-- Styles Resources -->
-<link rel="stylesheet" type="text/css" href="../Reporting/Resources/css/Filters.css" />
-<link rel="stylesheet" type="text/css" href="../Reporting/Resources/css/shrinkable-grid.css" />
+<link rel="stylesheet" type="text/css" href="./Resources/css/Filters.css" />
+<link rel="stylesheet" type="text/css" href="./Resources/css/shrinkable-grid.css" />
 
 <!-- Styles Internal -->
 <link rel="stylesheet" type="text/css" href="rs.aspx?css=jQuery" />
@@ -37,10 +37,10 @@
 <script type="text/javascript" src="rs.aspx?js_nocache=ModernScripts.IzendaLocalization"></script>
 
 <!-- Utils Resources -->
-<script type="text/javascript" src="../Reporting/Resources/js/ReportViewerFilters.js"></script>
-<script type="text/javascript" src="../Reporting/Resources/js/FieldProperties.js"></script>
-<script type="text/javascript" src="../Reporting/Resources/js/shrinkable-grid.js"></script>
-<script type="text/javascript" src="../Reporting/Resources/js/ContentRefreshIntervals.js"></script>
+<script type="text/javascript" src="./Resources/js/ReportViewerFilters.js"></script>
+<script type="text/javascript" src="./Resources/js/FieldProperties.js"></script>
+<script type="text/javascript" src="./Resources/js/shrinkable-grid.js"></script>
+<script type="text/javascript" src="./Resources/js/ContentRefreshIntervals.js"></script>
 
 <style type="text/css">
   .izenda-toolbar {
@@ -64,12 +64,12 @@
 
   .Filter div input, select {
     width: 100%;
-    margin-left: 0;
+    margin-left: 0px;
   }
 
   .Filter div input {
     width: 296px;
-    margin-left: 0;
+    margin-left: 0px;
   }
 
     .Filter div input[type="checkbox"] {
@@ -78,7 +78,7 @@
     }
 
   .filterValue {
-    padding-left: 0;
+    padding-left: 0px;
   }
 
   .pivot-selector select {
@@ -88,7 +88,7 @@
   }
 
   .pivot-selector div {
-    margin: 5px 0;
+    margin: 5px 0px;
   }
 
   .field-selector-container {
@@ -109,7 +109,7 @@
     line-height: 25px;
     vertical-align: baseline;
     border: none;
-    padding: 10px 4px 35px 4px;
+    padding: 7px;
     color: white !important;
     text-decoration: none !important;
     position: relative;
@@ -121,7 +121,6 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     position: relative;
-    color: #fff;
   }
 
   .f-button .blue {
@@ -140,7 +139,6 @@
 
   .f-button.middle .text {
     display: none;
-    color: #fff;
   }
 
   .f-button a img {
@@ -188,7 +186,7 @@
     height: 11px;
     width: 11px;
     position: relative;
-    padding: 0;
+    padding: 0px;
 }
 
 .multi-valued-check-advanced label {
@@ -201,9 +199,9 @@
     height: 12px;
     width: 12px;
     cursor: pointer;
-    padding-top: 0;
+    padding-top: 0px;
     border: none;
     left: -1px;
-    margin: 0;
+    margin: 0px;
 } 
 </style>
