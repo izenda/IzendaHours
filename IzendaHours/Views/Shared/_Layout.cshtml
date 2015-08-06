@@ -72,84 +72,13 @@
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/plug-ins/1.10.6/integration/bootstrap/3/dataTables.bootstrap.js"></script>
     <script type="text/javascript" charset="utf-8" src="//cdn.datatables.net/plug-ins/1.10.6/api/sum().js"></script>
     <script type="text/javascript" src="~/Scripts/jquery.dataTables.columnFilter.js"></script>
-    
 
-    <script type="text/javascript">
-        $("#timeTable").each( function () {
-            $(this).dataTable({
-                "aaSorting": [[0, 'desc']],
-                "stateSave": true,
-                "stateDuration": -1,
-                "footerCallback": function (row, data, start, end, display) {
-                    var api = this.api(), data;
+    <!--Select2 Scripts-->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/css/select2.min.css" rel="stylesheet" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/js/select2.min.js"></script>
 
-                    // Remove the formatting to get integer data for summation
-                    var intVal = function (i) {
-                        return typeof i === 'string' ?
-                            i.replace(/[\$,]/g, '') * 1 :
-                            typeof i === 'number' ?
-                            i : 0;
-                    };
+    <!--Custom Scripts-->
+    <script src="~/Content/hours.js"></script>
 
-                    // Total over all pages
-                    total = api
-                        .column(4)
-                        .data()
-                        .reduce(function (a, b) {
-                            return intVal(a) + intVal(b);
-                        });
-
-                    // Total over this page
-                    pageTotal = api
-                        .column(4, { page: 'current' })
-                        .data()
-                        .reduce(function (a, b) {
-                            return intVal(a) + intVal(b);
-                        }, 0);
-
-                    // Update footer
-                    $(api.column(4).footer()).html(
-                        pageTotal + ' hours'
-                    );
-                }
-            })
-            .columnFilter({
-                //sPlaceHolder: "head:before",
-                "bLengthChange": true,
-                "sDom": "lrtip",
-                "bAutoWidth": true, "sScrollY": "400px", "bPaginate": true, "bUseColVis": true, "bScrollCollapse": true, aoColumns: [{
-                    type: "date-range"
-                    
-                },
-                            {
-                                type: "select"
-                              
-                            },
-                            {
-                                type: "select"
-
-                            }
-                ]
-
-            });
-
-        });
-    </script>
-    <script type="text/javascript">
-        $(document).ready(function () {
-            $('#projectTable').DataTable();
-        });
-    </script>
-    <script type="text/javascript">
-    var jumboHeight = $('.jumbotron').outerHeight();
-    function parallax() {
-        var scrolled = $(window).scrollTop();
-        $('.bg').css('height', (jumboHeight - scrolled) + 'px');
-    }
-
-    $(window).scroll(function (e) {
-        parallax();
-    });
-    </script>
 </body>
 </html>

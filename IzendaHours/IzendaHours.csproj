@@ -1314,7 +1314,6 @@
     <Content Include="Views\Records\Details.cshtml" />
     <Content Include="Views\Records\Edit.cshtml" />
     <Content Include="Views\Records\Index.cshtml" />
-    <Content Include="Views\Records\Reporting.cshtml" />
     <Content Include="Views\Projects\Create.cshtml" />
     <Content Include="Views\Projects\Delete.cshtml" />
     <Content Include="Views\Projects\Edit.cshtml" />
