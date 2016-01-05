@@ -37,7 +37,7 @@
             AdHocSettings.ShowJoinAliasTextboxes = true;
             AdHocSettings.ShowJoinDropDown = true;
             AdHocSettings.ShowAdditionalJoinConditions = true;
-            //AdHocSettings.VisibleDataSources = new string[] {   };
+            AdHocSettings.VisibleDataSources = new string[] { "Projects", "Records", "Tasks" };
             AdHocSettings.ReportsPath = Path.Combine(HttpContext.Current.Server.MapPath("~/"), "Reports");
             //AdHocSettings.PrintMode = PrintMode.Html2PdfAndHtml;
             AdHocSettings.ChartingEngine = ChartingEngine.HtmlChart;

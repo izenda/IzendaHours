@@ -153,6 +153,10 @@ namespace IzendaHours.Controllers
         {
             if (User.Identity.IsAuthenticated)
             {
+                //HttpCookie myCookie = new HttpCookie("AdHocLogin");
+                //myCookie["UserName"] = User.Identity.GetUserName();
+                //myCookie.Expires = DateTime.Now.AddDays(1d);
+                //Response.Cookies.Add(myCookie);
                 return View();
             }
             return new HttpStatusCodeResult(HttpStatusCode.Forbidden);

@@ -14,8 +14,6 @@
         var firstName = first.First().ToString().ToUpper() + first.Substring(1);
 
     <ul class="nav navbar-nav navbar-right">
-    @if (User.Identity.GetUserName() == "admin")
-    {   
         <li class="dropdown">
             <a class="dropdown-toggle" data-toggle="dropdown">Project List<b class="caret"></b></a>
             <ul class="dropdown-menu">
@@ -26,13 +24,6 @@
     <li>
         @Html.ActionLink("Hello " + firstName + "!", "Index", "Manage", routeValues: null, htmlAttributes: new { title = "Manage" })
     </li>
-    }
-    else
-    {
-        <li>
-        @Html.ActionLink("Hello " + firstName + "!", "Index", "Manage", routeValues: null, htmlAttributes: new { title = "Manage" })
-        </li>
-    }
         <li><a href="javascript:document.getElementById('logoutForm').submit()">Log off</a></li>
     </ul>
     }
