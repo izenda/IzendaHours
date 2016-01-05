@@ -1,4 +1,8 @@
-﻿var filtersData = new Array();
+﻿String.prototype.endsWith = function (suffix) {
+  return this.indexOf(suffix, this.length - suffix.length) !== -1;
+};
+
+var filtersData = new Array();
 var subreportsFiltersData;
 var showingC = false;
 var calendars;
@@ -101,6 +105,8 @@ function GetFilterValues(index, filters, id) {
 		default:
 			break;
 	}
+	for (var i = 0; i < result.length; i++)
+		result[i] = result[i].NormalizeLineBreaks();
 	return result;
 }
 
@@ -108,10 +114,13 @@ function GetFilterValues(index, filters, id) {
 * Save filters stored in 'filtersData' variable.
 */
 function CommitChangedFilter(field) {
-	if (field.FilterGUID) {
+	if (field.FilterGUID) {	
 		for (var i = 0; i < filtersData.length; i++)
 			if (filtersData[i].GUID == field.FilterGUID) {
+				if (filtersData[i].OperatorValue.endsWith('Field') && !field.FilterOperator.endsWith('Field'))
+					filtersData[i].ClearValue = true;
 				filtersData[i].OperatorValue = field.FilterOperator;
+				filtersData[i].Alias = field.Alias;
 				break;
 			}
 	}
@@ -146,7 +155,7 @@ function CommitFiltersData(updateReportSet) {
 
 	var cmd = 'setfiltersdata';
 	if (!updateReportSet)
-	  cmd = 'refreshcascadingfilters';
+		cmd = 'refreshcascadingfilters';
 	var requestString = 'wscmd=' + cmd + '&wsarg0=' + encodeURIComponent(JSON.stringify(dataToCommit));
 	// Instant Report handling
 	if (typeof nirConfig != 'undefined' && nirConfig != null && typeof dataSources != 'undefined' && dataSources != null) {
@@ -172,7 +181,7 @@ function GetFiltersDataToCommit() {
 	var dataToCommit = new Array();
 	if (filtersData == null || filtersData.length <= 0)
 		return dataToCommit;
-	
+
 	for (var index = 0; index < filtersData.length; index++) {
 		var filterObj = new Object();
 		filterObj.Removed = filtersData[index].Removed;
@@ -182,8 +191,11 @@ function GetFiltersDataToCommit() {
 		filterObj.FieldFilter = filtersData[index].FieldFilter;
 		filterObj.OperatorValue = filtersData[index].OperatorValue;
 		filterObj.AliasTable = filtersData[index].AliasTable;
-		if (!filtersData[index].Removed)
+		filterObj.Alias = filtersData[index].Alias;
+		if (!filtersData[index].Removed && !filtersData[index].ClearValue)
 			filterObj.Values = GetFilterValues(index, filtersData).slice(1);
+		else
+			filterObj.Values = [null];
 		dataToCommit[index] = filterObj;
 	}
 	return dataToCommit;
@@ -249,9 +261,6 @@ function RemoveFilterByUid(uid) {
 	if (typeof nirConfig != 'undefined' && nirConfig != null)
 		updateReportSet = false;
 	CommitFiltersData(updateReportSet);
-
-	if (typeof updateFields != 'undefined')
-		updateFields();
 }
 
 function ShowHideAddFilter() {
@@ -303,23 +312,32 @@ function AddNewFilterField() {
 
 	filtersData.push(filterObj);
 	CommitFiltersData(false);
-	if (typeof updateFields != 'undefined')
-		updateFields();
 }
 
 function GenerateNewFilterDropDown() {
 	var result = '<select style="width:100%;" id="newFilterFieldDropDown" onchange="AddNewFilterField();">';
 	var optionsAdded = false;
 	result += '<option value="..." selected="selected">...</option>';
+
+	var existingParamFilters = new Array();
+	if (filtersData != null) {
+		for (var i = 0; i < filtersData.length; i++) {
+			var column = filtersData[i].ColumnName;
+			var isParam = column.substr(column.lastIndexOf('[') + 1).indexOf('PARAM') == 0;
+			if (isParam)
+				existingParamFilters.push(column);
+		}
+	}
+
 	for (var dsCnt = 0; dsCnt < dataSources.length; dsCnt++) {
 		if (dataSources.length > 1)
 			result += '<optgroup label="' + dataSources[dsCnt].FriendlyName + '">';
 
 		for (var fCnt = 0; fCnt < dataSources[dsCnt].Columns.length; fCnt++) {
-		    if (!dataSources[dsCnt].Columns[fCnt].FilterHidden) {
-		    	result += '<option value="' + dataSources[dsCnt].Columns[fCnt].DbName + '" data-alias="' + dataSources[dsCnt].JoinAlias + '">' + dataSources[dsCnt].Columns[fCnt].FriendlyName + '</option>';
-		        optionsAdded = true;
-		    }
+			if (!dataSources[dsCnt].Columns[fCnt].FilterHidden && existingParamFilters.indexOf(dataSources[dsCnt].Columns[fCnt].DbName) < 0) {
+				result += '<option value="' + dataSources[dsCnt].Columns[fCnt].DbName + '" data-alias="' + dataSources[dsCnt].JoinAlias + '">' + (dataSources[dsCnt].Columns[fCnt].FilterFriendlyName ? dataSources[dsCnt].Columns[fCnt].FilterFriendlyName : dataSources[dsCnt].Columns[fCnt].FriendlyName) + '</option>';
+				optionsAdded = true;
+			}
 		}
 
 		if (dataSources.length > 1)
@@ -337,7 +355,7 @@ function CheckShowAddFilterControls() {
 		if (newFilterDataDropDown == '')
 			return;
 
-		var addFilterButton$ = jq$('.fuidNewFilterTemplate').clone();
+		var addFilterButton$ = jq$(jq$('.fuidNewFilterTemplate').clone()[0]);
 		addFilterButton$.prop('id', 'fuidNewFilter');
 		if (makeFiltersFloat)
 			addFilterButton$.css('float', 'left');
@@ -439,14 +457,21 @@ function GetFilterContent(filters, index, divsId, hasFilterLogic, isSimpleFilter
 	filterContent.show();
 	filterContent.find('.filterInnerContent').prop('id', filter.Uid);
 
-	var mouseOverScript = 'this.children[1].style.opacity=0.5; this.children[1].style.backgroundImage= \'url(\\\'\' + this.children[1].getAttribute("data-img") + \'\\\')\'; this.children[2].style.opacity=0.5; this.children[2].style.backgroundImage=\'url(\\\'\' + this.children[2].getAttribute("data-img") + \'\\\')\'; document.getElementById(\''
+	var mouseOverScript = 'if(this.children[2]) { this.children[2].style.opacity=0.5; this.children[2].style.backgroundImage= \'url(\\\'\' + this.children[2].getAttribute("data-img") + \'\\\')\'; } if(this.children[3]) { this.children[2].style.opacity=0.5; this.children[3].style.backgroundImage=\'url(\\\'\' + this.children[3].getAttribute("data-img") + \'\\\')\'; } document.getElementById(\''
 						+ divsId
 						+ '\').innerHTML = \''
 						+ filter.Description
 						+ ' - '
 						+ filter.OperatorFriendlyName
-						+ '\';';
-	var mouseOutScript = 'for(var index = 1; index < this.children.length; index++){this.children[index].style.backgroundImage=\'none\';}document.getElementById(\''
+						+ '\';'
+						+ 'document.getElementById(\''
+						+ divsId
+						+ '\').setAttribute("title", "'
+						+ filter.Description
+						+ ' - '
+						+ filter.OperatorFriendlyName
+						+ '");';
+	var mouseOutScript = 'for(var index = 2; index < this.children.length; index++){this.children[index].style.backgroundImage=\'none\';}document.getElementById(\''
 						+ divsId
 						+ '\').innerHTML = \''
 						+ filter.Description
@@ -469,6 +494,8 @@ function GetFilterContent(filters, index, divsId, hasFilterLogic, isSimpleFilter
 	filterContent.find('.filterTitle').html(filter.Description + ' - ' + filter.OperatorFriendlyName);
 	var filterInnerContent = GenerateFilterControl(isSimpleFilter ? filter.GUID : index, filter.ControlType, filter.Value, filter.Values, filter.ExistingLabels, filter.ExistingValues, index == filters.length - 1 && !hasFilterLogic);
 	filterContent.find('.filterInnerContent').append(filterInnerContent);
+	if (filter.Required)
+		filterContent.find('.filterRequiredFlag').show();
 
 	if (filter.Parameter != false && filter.AgainstHiddenField)
 		filterContent.hide();
@@ -556,7 +583,7 @@ function FiltersDataSet(returnObj, id) {
 		GetDatasourcesList();
 }
 
-function HidePopupDialog(updateState) {
+function HideEqualsPopupDialog(updateState) {
 	if (updateState) {
 		var filterIndex = document.getElementById('popupDlgFilterIndex').value;
 		var newVal = '';
@@ -564,7 +591,7 @@ function HidePopupDialog(updateState) {
 		var cb = document.getElementById('ndbfc' + filterIndex + '_cb' + cnt6);
 		while (cb != null) {
 			if (cb.checked) {
-				if (newVal.length > 1)
+				if (newVal.length > 0)
 					newVal += ',';
 				newVal += cb.value;
 			}
@@ -574,18 +601,34 @@ function HidePopupDialog(updateState) {
 		var popupDlgValuesContainer = document.getElementById('ndbfc' + filterIndex);
 		popupDlgValuesContainer.value = newVal;
 	}
-	var popupEsDialog = document.getElementById('popupEsDialog');
-	popupEsDialog.style.display = 'none';
+	var epd = document.getElementById('IzendaEqualsPopupDialog');
+	if (epd) {
+		HideDialog(epd, true);
+	}
 	if (updateState) {
 		CommitFiltersData(false);
 	}
 }
 
 function ShowEqualsPopupDialog(filterInd) {
+	var width = '800px';
 	var filter = filtersData[filterInd];
+	if (filter == null && subreportsFiltersData != null && subreportsFiltersData.length > 0)
+		for (var i = 0; i < subreportsFiltersData.length; i++) {
+			if (filter != null)
+				break;
+			if (subreportsFiltersData[i].FiltersData != null && subreportsFiltersData[i].FiltersData.Filters != null)
+				for (var j = 0; j < subreportsFiltersData[i].FiltersData.Filters.length; j++)
+					if (subreportsFiltersData[i].FiltersData.Filters[j].GUID == filterInd) {
+						filter = subreportsFiltersData[i].FiltersData.Filters[j];
+						break;
+					}
+		}
+
 	var valueInput = document.getElementById('ndbfc' + filterInd);
 	var valuesSet6 = valueInput.value.split(',');
-	var epdHtml = '<table width="100%"><tr>';
+
+	var epdHtml = '<div id="IzendaEqualsPopupDialog" class="izenda-dialog-container"><div class="izenda-dialog-body"><table width="100%"><tr>';
 	var inLine = 0;
 	var rowsNum = 1;
 	var ecbCnt = 0;
@@ -599,7 +642,7 @@ function ShowEqualsPopupDialog(filterInd) {
 				checked = 'checked = "checked"';
 			}
 		}
-		epdHtml += '<td width="33%" align="left"><input type="checkbox" id="ndbfc' + filterInd + '_cb' + ecbCnt + '" ' + checked + ' value="' + filter.ExistingValues[evCnt] + '" />&nbsp;' + filter.ExistingLabels[evCnt] + '</td>';
+		epdHtml += '<td width="33%" align="left"><div class="izenda-checkbox"><label><input type="checkbox" id="ndbfc' + filterInd + '_cb' + ecbCnt + '" ' + checked + ' value="' + filter.ExistingValues[evCnt] + '" />' + filter.ExistingLabels[evCnt] + '</label></div></td>';
 		ecbCnt++;
 		inLine++;
 		if (inLine >= 3) {
@@ -610,41 +653,37 @@ function ShowEqualsPopupDialog(filterInd) {
 			}
 		}
 	}
-	epdHtml += '<input type="hidden" id="popupDlgFilterIndex" value="' + filterInd + '" />';
-	var epdContent = document.getElementById('epdContent');
-	epdContent.innerHTML = epdHtml;
-	var popupEsDialog = document.getElementById('popupEsDialog');
-	var windowHeight = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : document.body.clientHeight;
-	popupEsDialog.style.height = windowHeight + 'px';
-	var epdHeight = rowsNum * 28 + 110;
-	var padTop = ((windowHeight - epdHeight) / 2);
-	if (padTop < 140) {
-		padTop = 140;
-	}
-	popupEsDialog.style.paddingTop = padTop + 'px';
-	popupEsDialog.style.display = '';
+	epdHtml += '</tr></table><input type="hidden" id="popupDlgFilterIndex" value="' + filterInd + '" /></div>';
+	epdHtml += '<div class="izenda-dialog-footer">' +
+		'<button type="button" class="izenda-btn izenda-dialog-btn-primary izenda-width-100" onclick="javascript:HideEqualsPopupDialog(true);" lang-text="js_Ok">OK</button>' +
+		'<button type="button" class="izenda-btn izenda-dialog-btn-default izenda-width-100" onclick="javascript:HideEqualsPopupDialog(false);" lang-text="js_Cancel">Cancel</button>' +
+		'</div></div>';
+
+	ShowDialog(epdHtml, width, null, null, null, null, false, 'izenda izenda-dialog');
 }
 
 function GenerateFilterControl(index, cType, value, values, existingLabels, existingValues, isLastFilter) {
 	var notRefreshFilters = isLastFilter || nrvConfig && nrvConfig.CascadeFilterValues == false;
 	var onChangeCmd = notRefreshFilters ? '' : 'onchange="CommitFiltersData(false);"';
-	//var onKeyUpCmd = 'onkeyup="CommitFiltersData(false);"';
-	var onKeyUpCmd = '';
+	var onKeyUpDownCmd = notRefreshFilters ? '' : 'onkeyup="TextFilterInputKeyUp();" onkeydown="TextFilterInputKeyDown();"';
 	var result = '';
 	switch (cType) {
 		case 1:
-			result = '<input style="width:99%;" type="text" id="ndbfc' + index + '" value="' + value.replaceAll('"', "&quot;") + '" ' + onKeyUpCmd + ' />';
+			if (value == '...') value = '';
+			result = '<input style="width:99%;" type="text" id="ndbfc' + index + '" value="' + value.replaceAll('"', "&quot;") + '" ' + onKeyUpDownCmd + ' />';
 			break;
 		case 2:
-			result = '<input style="width:99%;" type="text" id="ndbfc' + index + '_l" value="' + values[0].replaceAll('"', "&quot;") + '" ' + onKeyUpCmd + ' />';
-			result += '<input style="width:99%;" type="text" id="ndbfc' + index + '_r" value="' + values[1].replaceAll('"', "&quot;") + '" ' + onKeyUpCmd + ' />';
+			if (values[0] == '...') values[0] = '';
+			if (values[1] == '...') values[1] = '';
+			result = '<input style="width:99%;" type="text" id="ndbfc' + index + '_l" value="' + values[0].replaceAll('"', "&quot;") + '" ' + onKeyUpDownCmd + ' />';
+			result += '<input style="width:99%;" type="text" id="ndbfc' + index + '_r" value="' + values[1].replaceAll('"', "&quot;") + '" ' + onKeyUpDownCmd + ' />';
 			break;
 		case 3:
 			result += '<select style="width:100%;" id="ndbfc' + index + '" ' + onChangeCmd + '>';
 			var groupOpened = false;
 			for (var cnt3 = 0; cnt3 < existingValues.length; cnt3++) {
 				var selected3 = '';
-				if (existingValues[cnt3] == value)
+				if (existingValues[cnt3] != null && existingValues[cnt3].LinelessEquals(value))
 					selected3 = 'selected="selected"';
 				if (existingValues[cnt3] == null) {
 					if (groupOpened)
@@ -669,6 +708,8 @@ function GenerateFilterControl(index, cType, value, values, existingLabels, exis
 			result += '</select>';
 			break;
 		case 5:
+			if (values[0] == '...') values[0] = '';
+			if (values[1] == '...') values[1] = '';
 			onChangeCmd = notRefreshFilters ? '' : 'onchange="setTimeout(function(){CommitFiltersData(false);},401);"';
 			result += '<input type="text" ' + onChangeCmd + ' value="' + values[0].replaceAll('"', "&quot;") + '" style="width:248px" id="ndbfc' + index + '_1" />';
 			calendars[calendars.length] = 'ndbfc' + index + '_1';
@@ -679,14 +720,15 @@ function GenerateFilterControl(index, cType, value, values, existingLabels, exis
 			result += '<img onclick="javascript: if (showingC) {return;} showingC = true; setTimeout(function() {document.getElementById(\'ndbfc' + index + '_2\').focus(); setTimeout(function(){showingC = false;jq$(\'#iz-ui-datepicker-div\').css(\'z-index\', \'2000\');}, 500);}, 500); " style="cursor:pointer;position:relative;top:4px;" src="' + urlSettings.urlRsPage + '?image=calendar_icon.png">';
 			break;
 		case 6:
-			result += '<input type="button" style="height:30px;width:300px;background-color:LightGray;border:1px solid DarkGray" onclick="ShowEqualsPopupDialog(' + index + ');" value="...">';
+			result += '<input type="button" style="height:30px;width:300px;background-color:LightGray;border:1px solid DarkGray" onclick="ShowEqualsPopupDialog(\'' + index + '\');" value="...">';
 			result += '<input type="hidden" id="ndbfc' + index + '" value="' + value + '" />';
 			break;
 		case 7:
-			result += '<textarea style="width:99%;" rows="2" id="ndbfc' + index + '" ' + onKeyUpCmd + '>' + value + '</textarea>';
+			if (value == '...') value = '';
+			result += '<textarea style="width:99%;" rows="2" id="ndbfc' + index + '" ' + onKeyUpDownCmd + '>' + value + '</textarea>';
 			break;
 		case 8:
-			result += '<div id="ndbfc' + index + '" class="saveScroll" style="padding-left:8px; width:96%; overflow: auto; max-height: 100px;background-color: white;border: 1px solid #A5A5A5;">';
+			result += '<div id="ndbfc' + index + '" class="saveScroll" style="padding-left:8px; width:96%; overflow: auto; max-height: 100px;background-color: white;border: 1px solid #A5A5A5; -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box;">';
 			var valuesSet8 = value.split(',');
 			for (var cnt8 = 0; cnt8 < existingValues.length; cnt8++) {
 				var checked8 = '';
@@ -701,10 +743,11 @@ function GenerateFilterControl(index, cType, value, values, existingLabels, exis
 			result += '</div>';
 			break;
 		case 9:
+			if (value == '...') value = '';
 			onChangeCmd = notRefreshFilters ? '' : 'onchange="setTimeout(function(){CommitFiltersData(false);},401);"';
 			result += '<input type="text" ' + onChangeCmd + ' value="' + value.replaceAll('"', "&quot;") + '" style="width:248px" id="ndbfc' + index + '" />';
 			calendars[calendars.length] = 'ndbfc' + index;
-			result += '<img onclick="javascript: if (showingC) {return;} showingC = true; setTimeout(function() {document.getElementById(\'ndbfc' + index + '\').focus(); setTimeout(function(){showingC = false;jq$(\'#iz-ui-datepicker-div\').css(\'z-index\', \'2000\');}, 500);}, 500); " style="cursor:pointer;position:relative;top:4px;" src="rs.aspx?image=calendar_icon.png">';
+			result += '<img onclick="javascript: if (showingC) {return;} showingC = true; setTimeout(function() {document.getElementById(\'ndbfc' + index + '\').focus(); setTimeout(function(){showingC = false;jq$(\'#iz-ui-datepicker-div\').css(\'z-index\', \'2000\');}, 500);}, 500); " style="cursor:pointer;position:relative;top:4px;" src="' + urlSettings.urlRsPage + '?image=calendar_icon.png">';
 			break;
 		case 10:
 			result += '<select class="saveScroll" style="width:100%" size="5" multiple="" id="ndbfc' + index + '" ' + onChangeCmd + '>';
@@ -722,16 +765,29 @@ function GenerateFilterControl(index, cType, value, values, existingLabels, exis
 			result += '</select>';
 			break;
 		case 11:
+			if (value == '...') value = '';
 			result += '<div style="display: none;" visibilitymode="1"><input type="text" id="ndbfc' + index + '" value="' + value.replaceAll('"', "&quot;") + '"/></div>';
 			result += '<div class="comboboxTreeMultyselect" index=' + index + '></div>';
 			break;
 		case 100:
-			result = '<input style="width:99%;" type="text" name="autocomplete-filter" id="ndbfc' + index + '" value="' + value.replaceAll('"', "&quot;") + '" ' + onKeyUpCmd + ' />';
+			if (value == '...') value = '';
+			result = '<input style="width:99%;" type="text" name="autocomplete-filter" id="ndbfc' + index + '" value="' + value.replaceAll('"', "&quot;") + '" ' + (notRefreshFilters ? '' : 'refresh="true"') + ' />';
 			break;
 		default:
 			result = '';
 	}
 	return result;
+}
+
+var textFilterInputTimer;
+function TextFilterInputKeyUp() {
+	if (textFilterInputTimer != null)
+		clearTimeout(textFilterInputTimer);
+	textFilterInputTimer = setTimeout(function () { CommitFiltersData(false); }, 1000);
+}
+function TextFilterInputKeyDown() {
+	if (textFilterInputTimer != null)
+		clearTimeout(textFilterInputTimer);
 }
 
 /**
@@ -972,7 +1028,7 @@ CC_FillCombobox = function (selectedValues, node, row) {
 
 		cValid.addClass("cValid");
 		cValid.attr("value", val);
-		var responseServerUrl = 'rs.aspx?';
+		var responseServerUrl = urlSettings.urlRsPage + '?';
 		// From ReportViewer.js
 		if (typeof nrvConfig != 'undefined')
 			responseServerUrl = nrvConfig.ResponseServerUrl + nrvConfig.serverDelimiter;
@@ -1033,7 +1089,21 @@ function InitAutoComplete() {
 				var filterIndex = jq$(this.element).attr('id').toString().replace('ndbfc', '');
 				var fullColumnName = filtersData[filterIndex].ColumnName;
 				var cmd = '&possibleValue=' + possibleText.replace('&', '%26');
-				EBC_LoadData('ExistentValuesList', 'columnName=' + fullColumnName + cmd, null, true, function (responseResult) {
+
+				// Make sure not to cache request if cascade filters were changed
+				var prevFiltersSignature = '';
+				if (window.utility.checksum != undefined) {
+					for (var f = 0; f < filtersData.length; f++) {
+						if (f == filterIndex)
+							continue;
+						prevFiltersSignature += JSON.stringify(filtersData[f]);
+					}
+					prevFiltersSignature = window.utility.checksum(prevFiltersSignature).toString();
+				}
+				else if (typeof (GenerateGuid) != 'undefined')
+					prevFiltersSignature = GenerateGuid();
+
+				EBC_LoadData('ExistentValuesList', 'columnName=' + fullColumnName + cmd + '&h=' + prevFiltersSignature, null, true, function (responseResult) {
 					var options = jq$(responseResult);
 					var cnt = options.length;
 					var result = new Array();
@@ -1059,6 +1129,8 @@ function InitAutoComplete() {
 				terms.pop();
 				terms.push(ui.item.value);
 				this.value = terms.join(", ");
+				if (jq$(this).attr('refresh'))
+					CommitFiltersData(false);
 				return false;
 			}
 		});

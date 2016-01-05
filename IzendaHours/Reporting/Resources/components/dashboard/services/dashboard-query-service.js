@@ -6,8 +6,8 @@ angular
   .module('izendaQuery')
   .factory('$izendaDashboardQuery', [
     '$izendaRsQuery',
-    '$log',
-    function ($izendaRsQuery, $log) {
+		'$izendaLocale',
+    function ($izendaRsQuery, $izendaLocale) {
       'use strict';
 
       /**
@@ -20,7 +20,7 @@ angular
         // custom error handler:
         {
           handler: function () {
-            return 'Failed to load dashboard layout';
+          	return $izendaLocale.localeText('js_LayoutLoadError', 'Failed to load dashboard layout');
           }
         });
       }
@@ -36,10 +36,9 @@ angular
       /**
        * Load tile report html
        */
-      function loadTileReport(updateFromSourceReport, dashboardFullName, reportFullName, reportPreviousFullName,
-            top, contentWidth, contentHeight, forPrint) {
-        var result = $izendaRsQuery.query(updateFromSourceReport ? 'updateandgetcrsreportpartpreview' : 'getcrsreportpartpreview',
-          [reportFullName, reportPreviousFullName, 1, top, contentWidth, contentHeight, forPrint],
+      function loadTileReport(options) {
+      	var result = $izendaRsQuery.query(options.updateFromSourceReport ? 'updateandgetcrsreportpartpreview' : 'getcrsreportpartpreview',
+          [options.reportFullName, options.reportPreviousFullName, 1, options.top, options.contentWidth, options.contentHeight, options.forPrint],
           {
             dataType: 'text',
             headers: {
@@ -49,9 +48,9 @@ angular
           // custom error handler:
           {
             handler: function (name) {
-              return 'Failed to load tile "' + name + '"';
+            	return $izendaLocale.localeText('js_TileLoadError', 'Failed to load tile') + ': ' + name;
             },
-            params: [reportFullName]
+            params: [options.reportFullName]
           });
         return result;
       }
@@ -61,14 +60,32 @@ angular
        */
       function saveDashboard(dashboardName, dashboardConfigObject) {
         return $izendaRsQuery.query('savecrsdashboard', [JSON.stringify(dashboardConfigObject), dashboardName], {
-          dataType: 'text'
+          dataType: 'text',
+          method: 'POST'
         },
         // custom error handler:
         {
           handler: function (name) {
-            return 'Failed to save dashboard "' + name + '"';
+          	return $izendaLocale.localeText('js_DashboardSaveError', 'Failed to save dashboard') + ': ' + name;
           },
           params: [dashboardName]
+        });
+      }
+
+      /**
+       * Sync dashboard state to server
+       */
+      function syncDashboard(dashboardConfigObject) {
+        return $izendaRsQuery.query('synccrsdashboard', [JSON.stringify(dashboardConfigObject)], {
+          dataType: 'text',
+          method: 'POST'
+        },
+        // custom error handler:
+        {
+          handler: function () {
+          	return $izendaLocale.localeText('js_DashboardSyncError', 'Failed to sync dashboard');
+          },
+          params: []
         });
       }
 
@@ -82,9 +99,28 @@ angular
         // custom error handler:
         {
           handler: function (name) {
-            return 'Failed to load tile "' + name + '" for print';
+          	return $izendaLocale.localeText('js_DashboardPrintTileError', 'Failed to load tile for print') + ': ' + name;
           },
           params: [reportPartName]
+        });
+      }
+
+      /**
+       * Load rendered for print dashboard
+       */
+      function loadDashboardForPrint() {
+        return $izendaRsQuery.rsQuery({
+          'p': 'htmlreport',
+          'printmanual': '1'
+        }, {
+          dataType: 'text'
+        },
+        // custom error handler:
+        {
+          handler: function () {
+	          return $izendaLocale.localeText('js_DashboardPrintError', 'Failed to load dashboard for print');
+          },
+          params: []
         });
       }
 
@@ -94,6 +130,8 @@ angular
         loadTileReport: loadTileReport,
         loadTileReportForPrint: loadTileReportForPrint,
         saveDashboard: saveDashboard,
-        setReportPartTop: setReportPartTop
+        syncDashboard: syncDashboard,
+        setReportPartTop: setReportPartTop,
+        loadDashboardForPrint: loadDashboardForPrint
       };
     }]);

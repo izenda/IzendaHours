@@ -1,10 +1,10 @@
-/* Copyright (c) 2005-2010 Izenda, L.L.C.
+/* Copyright (c) 2005 Izenda, Inc.
 
  ____________________________________________________________________
 |                                                                   |
 |   Izenda .NET Component Library                                   |
 |                                                                   |
-|   Copyright (c) 2005-2010 Izenda, L.L.C.                          |
+|   Copyright (c) 2005 Izenda, Inc.                                 |
 |   ALL RIGHTS RESERVED                                             |
 |                                                                   |
 |   The entire contents of this file is protected by U.S. and       |
@@ -178,6 +178,8 @@ function SC_GetFieldsList(id, columnName, functionName)
 		var descriptionEdit = EBC_GetInputByName(body.rows[i], 'Description');
 		var operationElem = new AdHoc.MultivaluedCheckBox('ArithmeticOperation', body.rows[i]);
 		var coefficientEdit = EBC_TextAreaByName(body.rows[i], 'Coefficient');
+		var expressionTypeElem = EBC_GetSelectByName(body.rows[i], 'ExpressionType');
+
 		if (columnSel != null)
 		{
 			var columnSelValue = columnSel.value;
@@ -206,6 +208,7 @@ function SC_GetFieldsList(id, columnName, functionName)
 				    if (coefVal.trim() != "" && coefVal.indexOf('example:') != 0)
 				        field.coefficient = coefVal;
 				}
+				field.expressionType = expressionTypeElem == null ? '' : expressionTypeElem.value;
 				field.index = i;
 				fields.push(field);
 			}
@@ -213,9 +216,6 @@ function SC_GetFieldsList(id, columnName, functionName)
 			{
 				if (operationElem.ElementExists())
 					operationElem.disable();
-				var justificationElem = new AdHoc.MultivaluedCheckBox('Justification', body.rows[i]);
-				if (justificationElem.ElementExists())
-					justificationElem.disable();
 			}
 		}
 	}
@@ -387,7 +387,7 @@ function SC_OnExtraColumnChangedHandler(e, el, columnName)
 			var mustGroup = SC_mustGroupOrFunction[id];
 			if (SC_mustGroupOrFunction[id] == undefined && EBC_GetSelectByName(EBC_GetParentTable(row).rows[0], 'ExtraFunction').value != 'None')
 			    mustGroup = true;
-			EBC_SetFunctions(row, true, true, null, false, 'ExtraValueFunction', null, null, cName, null, null, true);
+			EBC_SetFunctions(row, true, false, null, false, 'ExtraValueFunction', null, null, cName, null, null, true);
 		
 			EBC_SetFormat(row, null, cName, 'ExtraFormat');
 			
@@ -401,165 +401,420 @@ function SC_OnExtraColumnChangedHandler(e, el, columnName)
 					descriptionEdit.value = colName;
 			}
 			
-			/*if (columnSel.value != '' && columnSel.value != '...')
-			{
-				var multiPivot = row.getAttribute("multyPivots");
-				if (multiPivot == "1")
-					EBC_AddEmptyRow(row, 1);
-			}*/
+			SC_ColumnChangeContext = {};
+			SC_ColumnChangeContext.row = row;
+			SC_ColumnChangeContext.strColumn = cName;
+			SC_ColumnChangeContext.columnSel = columnSel;
+			SC_ResetRowToDefault(true);
 		}
 	}
 }
 
-function SC_OnColumnChangedHandler(e, el)
+function SC_InsertExtraColumnBelow(id)
 {
-	if(e)
+    EBC_InsertBelowHandler(event, 1);
+    if (jq$('#' + id + '_ExtraColumn').children().children().length > 1){
+        jq$('.' + id + '_ExtraDescription_Label1').show();
+        jq$('.' + id + '_ExtraDescription').show();
+        jq$(this).parents('tr').next().find('.' + id + '_ExtraDescription').val('');
+        jq$('.' + id + '_ExtraDescription_Label2').show();
+    }
+}
+
+function SC_RemoveExtraColumn(id, force)
+{
+	EBC_RemoveNotLastRowHandler('ExtraValue', event, force);
+    if (jq$('#' + id + '_ExtraColumn').children().children().length < 3) {
+        jq$('.' + id + '_ExtraDescription_Label1').hide();
+        jq$('.' + id + '_ExtraDescription').hide();
+        jq$('.' + id + '_ExtraDescription_Label2').hide();
+    }
+}
+
+var SC_ColumnChangeContext = {};
+
+function SC_OnColumnChangedHandler(e, el) {
+	if (e) {
 		ebc_mozillaEvent = e;
+	}
+
 	var row = EBC_GetRow();
-	var strColumn = el.name.substr(el.name.lastIndexOf("_") + 1); //allows this handler to work with any asp.net named dropdown
-	var strFunction = jq$(row).find("select[name*=Function][onchange*=OnFunctionChangeHandler]").attr("name"); //gets the name of the first select with a name like "Function" and an OnFunctionChangeHandler
-	strFunction = strFunction.substr(strFunction.lastIndexOf("_") + 1); //shortens the name to the last part after the asp.net generated name
-	if (row != null)
-	{
-		if(row._scColumnChangeFired == true)
+
+	if (row != null && row.parentNode != null) {
+		if (row._scColumnChangeFired == true) {
 			return;
+		}
 		row._scColumnChangeFired = true;
 		row._ignoreDescriptor = 0;
+
 		var parentTable = EBC_GetParentTable(row);
+		var id = parentTable.id;
 		var savedAutogrouping = parentTable.skipAutogrouping;
-		parentTable.skipAutogrouping = true;		
+		parentTable.skipAutogrouping = true;
+
 		try {
-		    var columnSel = EBC_GetSelectByName(row, strColumn);
-		  var oldValue = columnSel.getAttribute("oldValue");
-		  if (columnSel.options[columnSel.selectedIndex].restrictselecting == "true") {
-		    if (oldValue != null && columnSel.options[columnSel.selectedIndex].value != oldValue) {
-		      EBC_SetSelectedIndexByValue(columnSel, oldValue);
-		      alert("This field cannot be selected.");
-		    }
-		  }		
-		}
-		catch(exc) {
-		}		
-		try {
-		    var columnSel = EBC_GetSelectByName(row, strColumn);
-		  if (EBC_IsRealChangedSelValue(columnSel))
-		    row.setAttribute("userChanged", "false");
-		  var descriptionEdit = EBC_GetInputByName(row, 'Description');
-			var groupCheckbox = EBC_GetElementByName(row, 'Group', 'INPUT');
-			var orderCheckbox = EBC_GetElementByName(row, 'Order', 'INPUT');
-			var orderDescCheckbox = EBC_GetElementByName(row, 'OrderDesc', 'INPUT');
-			var invCheckbox = EBC_GetElementByName(row, 'Invisible', 'INPUT');
-			var operationElem = new AdHoc.MultivaluedCheckBox('ArithmeticOperation', row);
-			var justificationElem = new AdHoc.MultivaluedCheckBox('Justification', row);
-			var funcSelect = EBC_GetSelectByName(row, strFunction);
-			var funcSelectValue = '';
-			if (funcSelect && funcSelect.value != 'None' && funcSelect.value != null)
-				funcSelectValue = funcSelect.value;
-			if (orderCheckbox != null)
-			{
-			    orderCheckbox.disabled = false;
-			    orderDescCheckbox.disabled = false;
+			var isLoadCalled = loadCalled[row.rowIndex - 1] == 1;
+
+			var strColumn = el.name.substr(el.name.lastIndexOf("_") + 1);
+			var columnSel = EBC_GetSelectByName(row, strColumn);
+			var strFunction = jq$(row).find("select[name*=Function][onchange*=OnFunctionChangeHandler]").attr("name");
+			strFunction = strFunction.substr(strFunction.lastIndexOf("_") + 1);
+			var oldValue = columnSel.getAttribute("oldValue");
+			var isNotSelectedColumnSel = (columnSel.value == "" || columnSel.value == "..." || columnSel.selectedIndex == -1);
+
+			var isSameValue = oldValue != null && columnSel.options[columnSel.selectedIndex].value == oldValue;
+			var fieldCannotBeSelected = false;
+			var showChangeRowCheckDialog = false;
+			var coefficientEditTemp = EBC_GetElementByName(row, "Coefficient", "TEXTAREA");
+
+			if (oldValue != null && columnSel.options[columnSel.selectedIndex].value != oldValue) {
+				if (columnSel.options[columnSel.selectedIndex].restrictselecting == "true") {
+					var dialogHtml = "<div id=\"" + id + "_ChangeRowCheck\"><div>This field cannot be selected.</div><br /><input type=\"button\" id=\"" + id + "_ChangeRowCheck_Ok\" value=\"" + jsResources.OK + "\" name=\"" + id + "_ChangeRowCheck_Ok\" onclick=\"SC_ChangeRowCheckDialogResult(false, '" + id + "');\"></div>";
+					ShowDialog(dialogHtml);
+					fieldCannotBeSelected = true;
+					showChangeRowCheckDialog = true;
+				} else if (coefficientEditTemp && coefficientEditTemp.value.trim().indexOf("example") != 0) {
+					var dialogHtml = "<div id=\"" + id + "_ChangeRowCheck\"><div>You will lose Expression data if you select a different field. Continue?</div><br /><input type=\"button\" id=\"" + id + "_ChangeRowCheck_Ok\" value=\"" + jsResources.OK + "\" name=\"" + id + "_ChangeRowCheck_Ok\" onclick=\"SC_ChangeRowCheckDialogResult(true, '" + id + "');\">&nbsp;" +
+						"<input type=\"button\" id=\"" + id + "_ChangeRowCheck_Cancel\" value=\"" + jsResources.Cancel + "\" name=\"" + id + "_ChangeRowCheck_Cancel\" onclick=\"SC_ChangeRowCheckDialogResult(false, '" + id + "');\"></div>";
+					ShowDialog(dialogHtml);
+					showChangeRowCheckDialog = true;
+				}
 			}
-			if (columnSel && descriptionEdit)
-			{
-				if (loadCalled[row.rowIndex-1] == '1')
-					loadCalled[row.rowIndex-1] = '0';
-				else
-				{
-					if (columnSel.selectedIndex < 0)
-						descriptionEdit.value = '';
-					else
-					{
-						var columnName = columnSel.options[columnSel.selectedIndex].text;
-						if (columnName == '' || columnName == '...' || columnName == 'Loading ...' || funcSelect.selectedIndex==-1)
-							descriptionEdit.value = '';
-						if (groupCheckbox != null && groupCheckbox)
-							groupCheckbox.disabled = false;
-						if (invCheckbox)
-							invCheckbox.disabled = false;
-						funcSelect.disabled = false;
-						if (operationElem.ElementExists())
-							operationElem.enable();
+
+			if (columnSel) {
+				if (isLoadCalled) {
+					loadCalled[row.rowIndex - 1] = 0;
+				}
+
+				if (!isNotSelectedColumnSel && !fieldCannotBeSelected) {
+					var newRow = EBC_AddEmptyRow(row);
+					if (newRow) {
+						var newColumnSel = EBC_GetSelectByName(newRow, strColumn);
+						SC_ColumnChangeContext = {};
+						SC_ColumnChangeContext.row = newRow;
+						SC_ColumnChangeContext.strColumn = strColumn;
+						SC_ColumnChangeContext.columnSel = newColumnSel;
+						SC_ColumnChangeContext.strFunction = strFunction;
+						SC_ColumnChangeContext.oldValue = newColumnSel.getAttribute("oldValue");
+						SC_ColumnChangeContext.isNotSelectedColumnSel = true;
+
+						SC_ResetRowToDefault();
 					}
 				}
-				if (columnSel.value != '' && columnSel.value != '...')
-					EBC_AddEmptyRow(row);
 			}
-			if(columnSel.selectedIndex==-1)
-				dataTypeGroup = "";
-			else
-			{
-			    dataTypeGroup = EBC_GetDataTypeGroup(row, strColumn, strFunction, null);
-				if(dataTypeGroup==null)
-					dataTypeGroup = "";
-			}
-			var id = EBC_GetParentTable(row).id;
-			if (dataTypeGroup=="Binary"  && operationElem.ElementExists())
-				operationElem.disable();
-			if (dataTypeGroup=="Binary")
-			{
-				orderCheckbox.checked = false;
-				orderDescCheckbox.checked = false;
-				orderCheckbox.disabled = true;
-				orderDescCheckbox.disabled = true;
-			}
-			if(justificationElem.ElementExists())
-			{
-				if (columnSel.value == '' || columnSel.value == '...' || columnSel.selectedIndex==-1)
-					justificationElem.disable();
-				else
-					justificationElem.enable();
-			}
-			if(operationElem.ElementExists())
-			{
-				if (columnSel.value == '' || columnSel.value == '...' || columnSel.selectedIndex==-1)
-					operationElem.disable();
-				else
-					operationElem.enable();
-			}
-			
-			var mustGroupOrFunction = false;
-			var body = parentTable.tBodies[0];
-			var rows = body.rows;
-			var i = 0;
-			var count = rows.length;
-			while (!mustGroupOrFunction && i<count)
-			{
-			    var funcTemp = EBC_GetSelectByName(rows[i], strFunction);
-			  var isScalar = funcTemp == null ? null : funcTemp.options[funcTemp.selectedIndex].getAttribute("isScalar");
-			  isScalar = isScalar == null || isScalar.length == 0 ? '0' : isScalar;			  
-			  mustGroupOrFunction = (funcTemp == null ? false : funcTemp.selectedIndex > 0 && isScalar == '0');
-				i++;
-			}
-			EBC_SetFunctions(row, mustGroupOrFunction, false, null, true, strFunction, null, null, strColumn); //SC_mustGroupOrFunction[id]
-			EBC_SetFunctions(
-				row,
-				mustGroupOrFunction,
-				false,
-				null,
-				true,
-				"SubtotalFunction",
-				false,				
-				true,
-                strColumn);
 
-			// EBC_SetFunctions - automatic call SC_OnGroupFunctionChangeHandler
-			// SC_OnGroupFunctionChangeHandler(e, el);
-			
-			if(operationElem.ElementExists() && operationElem.isEnabled())
-				SC_AfterArithmeticOperationChanged(ebc_mozillaEvent);
-			// EBC_SetFunctions - automatic call SC_CallOnColumnFunctionChangeHandlers
-			//SC_CallOnColumnFunctionChangeHandlers(id);
-		}
-		finally
-		{
+			SC_ColumnChangeContext = {};
+			SC_ColumnChangeContext.row = row;
+			SC_ColumnChangeContext.strColumn = strColumn;
+			SC_ColumnChangeContext.columnSel = columnSel;
+			SC_ColumnChangeContext.strFunction = strFunction;
+			SC_ColumnChangeContext.oldValue = oldValue;
+			SC_ColumnChangeContext.isNotSelectedColumnSel = isNotSelectedColumnSel;
+
+			if (!showChangeRowCheckDialog && !isSameValue) {
+				SC_ResetRowToDefault();
+			}
+		} finally {
 			row._scColumnChangeFired = false;
-			SC_SetAcceptableValues(row, operationElem);
 			parentTable.skipAutogrouping = savedAutogrouping;
 		}
-
-		EBC_SetDescription(row);
 	}
+}
+
+function SC_ResetRowToDefault(isExtraColumn) {
+	var row = SC_ColumnChangeContext.row,
+		columnSel = SC_ColumnChangeContext.columnSel,
+		strColumn = SC_ColumnChangeContext.strColumn,
+		strFunction = SC_ColumnChangeContext.strFunction,
+		isNotSelectedColumnSel = SC_ColumnChangeContext.isNotSelectedColumnSel;
+
+	var prefix = isExtraColumn ? 'exv' : '';
+
+	if (row && columnSel) {
+		if (EBC_IsRealChangedSelValue(columnSel)) {
+			row.setAttribute("userChanged", "false");
+		}
+
+		var parentTable = EBC_GetParentTable(row);
+
+		var dataTypeGroup = "";
+		if (columnSel.selectedIndex != -1) {
+			dataTypeGroup = EBC_GetDataTypeGroup(row, strColumn, strFunction, null);
+			if (dataTypeGroup == null) {
+				dataTypeGroup = "";
+			}
+		}
+
+		var isBinaryDataTypeGroup = dataTypeGroup == "Binary";
+		var disabledSort = isBinaryDataTypeGroup;
+
+		/* 
+		 * General Field Settings
+		 */
+
+		/* Description */
+		var descriptionEdit = EBC_GetInputByName(row, prefix + "Description");
+		if (descriptionEdit) {
+			descriptionEdit.value = "";
+			descriptionEdit.disabled = false;
+
+			EBC_SetDescription(row, true);
+		}
+
+		/* Function */
+		var funcSelect = EBC_GetSelectByName(row, strFunction);
+		if (funcSelect) {
+			funcSelect.selectedIndex = 0;
+			funcSelect.disabled = false;
+		}
+
+		var mustGroupOrFunction = false;
+		var body = parentTable.tBodies[0];
+		var rows = body.rows;
+		var i = 0;
+		var count = rows.length;
+		while (!mustGroupOrFunction && i < count) {
+			var funcTemp = EBC_GetSelectByName(rows[i], strFunction);
+			var groupCheckboxTemp = EBC_GetElementByName(rows[i], prefix + "Group", "INPUT");
+			var isGruopChecked = groupCheckboxTemp && groupCheckboxTemp.checked;
+			var isScalar = funcTemp == null ? null : funcTemp.options[funcTemp.selectedIndex].getAttribute("isScalar");
+			isScalar = isScalar == null || isScalar.length == 0 ? "0" : isScalar;
+			mustGroupOrFunction = (funcTemp == null ? false : (funcTemp.selectedIndex > 0 || isGruopChecked) && isScalar == "0");
+			i++;
+		}
+
+		/* Group */
+		var groupCheckbox = EBC_GetElementByName(row, prefix + "Group", "INPUT");
+		if (groupCheckbox) {
+			groupCheckbox.checked = mustGroupOrFunction && !isNotSelectedColumnSel;
+			groupCheckbox.disabled = false;
+			mustGroupOrFunction = false;
+		}
+
+		/* Sort */
+		var orderCheckbox = EBC_GetElementByName(row, prefix + "Order", "INPUT");
+		if (orderCheckbox) {
+			orderCheckbox.checked = false;
+			orderCheckbox.disabled = disabledSort;
+		}
+
+		/* VG */
+		var masterCheckbox = EBC_GetElementByName(row, prefix + "Master", "INPUT");
+		if (masterCheckbox) {
+			masterCheckbox.checked = false;
+			masterCheckbox.disabled = false;
+		}
+
+		/* A */
+		var arithmeticOperationElem = new AdHoc.MultivaluedCheckBox(prefix + "ArithmeticOperation", row);
+		if (arithmeticOperationElem.ElementExists()) {
+			if (isNotSelectedColumnSel || isBinaryDataTypeGroup) {
+				arithmeticOperationElem.disable();
+			} else {
+				arithmeticOperationElem.enable();
+				arithmeticOperationElem.setValueInternal(" ");
+			}
+			SC_AfterArithmeticOperationChanged(ebc_mozillaEvent);
+		}
+
+		/* 
+		 * Advanced Field Settings
+		 */
+
+		/* Column Group */
+		var columnGroupEdit = EBC_GetInputByName(row, prefix + "ColumnGroup");
+		if (columnGroupEdit) {
+			columnGroupEdit.value = columnGroupEdit.getAttribute("data-default") || "";;
+			columnGroupEdit.disabled = false;
+		}
+
+		/* Break Page After VG (PDF) */
+		var breakPageCheckbox = EBC_GetElementByName(row, prefix + "BreakPage", "INPUT");
+		if (breakPageCheckbox) {
+			breakPageCheckbox.checked = false;
+			breakPageCheckbox.disabled = true;
+		}
+
+		/* Multiline Header */
+		var multilineHeaderCheckbox = EBC_GetElementByName(row, prefix + "IsMultilineHeader", "INPUT");
+		if (multilineHeaderCheckbox) {
+			multilineHeaderCheckbox.checked = false;
+			multilineHeaderCheckbox.disabled = false;
+		}
+
+		/* Hide this field */
+		var invisibleCheckbox = EBC_GetElementByName(row, prefix + "Invisible", "INPUT");
+		if (invisibleCheckbox) {
+			invisibleCheckbox.checked = false;
+			invisibleCheckbox.disabled = false;
+		}
+
+		/* Separator */
+		var separatorCheckbox = EBC_GetElementByName(row, prefix + "Separator", "INPUT");
+		if (separatorCheckbox) {
+			separatorCheckbox.checked = false;
+			separatorCheckbox.disabled = false;
+		}
+
+		/* Sort (z-a) */
+		var orderDescCheckbox = EBC_GetElementByName(row, prefix + "OrderDesc", "INPUT");
+		if (orderDescCheckbox) {
+			orderDescCheckbox.checked = false;
+			orderDescCheckbox.disabled = disabledSort;
+		}
+
+		/* Italic */
+		var italicCheckbox = EBC_GetElementByName(row, prefix + "Italic", "INPUT");
+		if (italicCheckbox) {
+			italicCheckbox.checked = false;
+			italicCheckbox.disabled = false;
+		}
+
+		/* Bold */
+		var boldCheckbox = EBC_GetElementByName(row, prefix + "Bold", "INPUT");
+		if (boldCheckbox) {
+			boldCheckbox.checked = false;
+			boldCheckbox.disabled = false;
+		}
+
+		/* Width */
+		var widthEdit = EBC_GetInputByName(row, prefix + "Width");
+		if (widthEdit) {
+			widthEdit.value = widthEdit.getAttribute("data-default") || "";
+			widthEdit.disabled = false;
+		}
+
+		/* Label Justification */
+		var labelJustificationElem = new AdHoc.MultivaluedCheckBox(prefix + "LabelJustification", row);
+		if (labelJustificationElem.ElementExists()) {
+			labelJustificationElem.enable();
+			labelJustificationElem.setValueInternal("M");
+		}
+
+		/* Value Justification */
+		var justificationElem = new AdHoc.MultivaluedCheckBox(prefix + "Justification", row);
+		if (justificationElem.ElementExists()) {
+			justificationElem.enable();
+			justificationElem.setValueInternal(" ");
+		}
+
+		/* Subreport */
+		var subreportSelect = EBC_GetSelectByName(row, prefix + "Subreport");
+		if (subreportSelect) {
+			subreportSelect.selectedIndex = 0;
+			subreportSelect.disabled = false;
+		}
+
+		/* Drill-Down Style */
+		var drillDownStyleSelect = EBC_GetSelectByName(row, prefix + "DrillDownStyle");
+		if (drillDownStyleSelect) {
+			drillDownStyleSelect.selectedIndex = 0;
+			drillDownStyleSelect.disabled = true;
+		}
+
+		/* Url */
+		var urlEdit = EBC_GetInputByName(row, prefix + "Url");
+		if (urlEdit) {
+			urlEdit.value = urlEdit.getAttribute("data-default") || "";
+			urlEdit.disabled = false;
+		}
+
+		/* Subtotal Function */
+		var subtotalFunctionSelect = EBC_GetSelectByName(row, prefix + "SubtotalFunction");
+		if (subtotalFunctionSelect) {
+			subtotalFunctionSelect.selectedIndex = 0;
+			subtotalFunctionSelect.disabled = false;
+		}
+
+		/* Subtotal Expression */
+		var subtotalExpressionEdit = EBC_GetElementByName(row, prefix + "SubtotalExpression", "TEXTAREA");
+		if (subtotalExpressionEdit) {
+			subtotalExpressionEdit.value = subtotalExpressionEdit.getAttribute("data-default") || "";
+			subtotalExpressionEdit.disabled = false;
+		}
+
+		/* Gradient Cells Shading */
+		var gradientCheckbox = EBC_GetElementByName(row, prefix + "Gradient", "INPUT");
+		if (gradientCheckbox) {
+			gradientCheckbox.checked = false;
+			gradientCheckbox.disabled = false;
+		}
+
+		/* Text Highlight */
+		var textHighlightEdit = EBC_GetInputByName(row, prefix + "TextHighlight");
+		if (textHighlightEdit) {
+			textHighlightEdit.value = textHighlightEdit.getAttribute("data-default") || "";
+			textHighlightEdit.disabled = false;
+		}
+
+		/* Cell Highlight */
+		var cellHighlightEdit = EBC_GetInputByName(row, prefix + "CellHighlight");
+		if (cellHighlightEdit) {
+			cellHighlightEdit.value = cellHighlightEdit.getAttribute("data-default") || "";
+			cellHighlightEdit.disabled = false;
+		}
+
+		/* Value Ranges */
+		var valueRangesEdit = EBC_GetInputByName(row, prefix + "ValueRanges");
+		if (valueRangesEdit) {
+			valueRangesEdit.value = valueRangesEdit.getAttribute("data-default") || "";
+			valueRangesEdit.disabled = false;
+		}
+
+		/* Expression */
+		var coefficientEdit = EBC_GetElementByName(row, prefix + "Coefficient", "TEXTAREA");
+		if (coefficientEdit) {
+			coefficientEdit.value = coefficientEdit.getAttribute("data-default") || "";
+			coefficientEdit.disabled = false;
+		}
+
+		/* Expression type */
+		var expressionTypeSelect = EBC_GetSelectByName(row, prefix + "ExpressionType");
+		if (expressionTypeSelect) {
+			expressionTypeSelect.selectedIndex = 0;
+			expressionTypeSelect.disabled = false;
+		}
+
+		/* Group By Expression */
+		var groupByExpressionCheckbox = EBC_GetElementByName(row, prefix + "GroupByExpression", "INPUT");
+		if (groupByExpressionCheckbox) {
+			groupByExpressionCheckbox.checked = false;
+			groupByExpressionCheckbox.disabled = false;
+		}
+
+		/* 
+		 * Post-Actions
+		 */
+
+		EBC_SetFunctions(row, mustGroupOrFunction, false, null, true, strFunction, null, null, strColumn);
+		EBC_SetFunctions(row, mustGroupOrFunction, false, null, true, prefix + "SubtotalFunction", false, true, strColumn);
+
+		if (!isNotSelectedColumnSel && strColumn == (prefix + "Column")) {
+			SC_CheckPropertiesModified(row);
+		}
+
+		if (arithmeticOperationElem.ElementExists()) {
+			SC_SetAcceptableValues(row, arithmeticOperationElem);
+		}
+	}
+}
+
+function SC_ChangeRowCheckDialogResult(result, id) {
+	var dialog = document.getElementById(id + "_ChangeRowCheck");
+	if (result) {
+		SC_ResetRowToDefault();
+	} else {
+		var row = SC_ColumnChangeContext.row,
+			columnSel = SC_ColumnChangeContext.columnSel,
+			oldValue = SC_ColumnChangeContext.oldValue;
+		if (row && columnSel && (typeof oldValue != "undefined" && oldValue != null)) {
+			EBC_SetSelectedIndexByValue(columnSel, oldValue);
+			if (oldValue == '' || oldValue == '...') {
+				SC_ResetRowToDefault();
+			}
+		}
+	}
+	HideDialog(dialog, true);
 }
 
 function SC_GetStringBeforeParenthesis(src)
@@ -1043,31 +1298,35 @@ function SC_InitRow(row)
 		SC_AfterArithmeticOperationChanged(ebc_mozillaEvent);
 }
 
-function SC_Init(id, checked, mustGroupOrFunction, a, g)
-{
+function SC_Init(id, checked, mustGroupOrFunction, a, g) {
 	groupByMonthName = g;
 	allowComparativeArithmetic = a;
 	fieldValueChecked[id] = checked;
 	SC_mustGroupOrFunction[id] = mustGroupOrFunction;
 	EBC_RegisterControl(id);
-	EBC_RegisterControl(id + '_ExtraColumn');
 	EBC_SetData('@SC/Empty', '<option value=\'...\'>...</option>');
-	table = document.getElementById(id);
+	var table = document.getElementById(id);
 	EBC_RegisterRowInsertHandler(table, SC_InitNewRow);
 	var body = table.tBodies[0];
-	var count = body.rows.length;	
-	for (var i = 0; i < count; i++)
-	{
+	var count = body.rows.length;
+	for (var i = 0; i < count; i++) {
 		SC_CheckPropertiesModified(body.rows[i]);
 		var columnSel = EBC_GetSelectByName(body.rows[i], 'Column');
-		if(columnSel.value!="..." && columnSel.value!="")
+		if (columnSel.value != "..." && columnSel.value != "")
 			body.rows[i].setAttribute("userChanged", "true");
-		//SC_InitRow(body.rows[i]);
 	}
-	var extraRows = jq$("[id$='ExtraColumn_valueTR']");
+	SC_CheckGroupingAndFunctions(id);
+	EBC_RegisterRowRemoveHandler(table, SC_OnRemoveTableRow);
+	EBC_RegiserForUnusedRowsRemoving(table);
+}
+
+function SC_InitPivotTable(id) {
+	EBC_RegisterControl(id);
+	var table = document.getElementById(id);
+	EBC_RegisterRowInsertHandler(table, SC_InitNewRow);
+	var extraRows = jq$(table).find("[id$='ExtraColumn_valueTR']");
 	for (var i = 0; i < extraRows.length; i++)
 		SC_CheckPropertiesModified(extraRows[i]);
-	SC_CheckGroupingAndFunctions(id);
 	EBC_RegisterRowRemoveHandler(table, SC_OnRemoveTableRow);
 	EBC_RegiserForUnusedRowsRemoving(table);
 }
@@ -1282,7 +1541,7 @@ function SC_QuickAdd(id, columnNumber, minInColumn, maxFieldWidth)
 		html += "</table>";
 	}
 	html += "</div><input type='button' id='" + id + "_QuickAdd_Ok' value='" + jsResources.OK + "' name='" + id + "_QuickAdd_Ok' onclick=\"SC_QuickAdd_Close(true, '" + id + "')\">&nbsp;";
-	html += "<input type='button' id='" + id + "_QuickAdd_Cancel' value='" + jsResources.Cancel + "' name='" + id + "_QuickAdd_Cancel' onclick='SC_QuickAdd_Close(false)'>"
+	html += "<input type='button' id='" + id + "_QuickAdd_Cancel' value='" + jsResources.Cancel + "' name='" + id + "_QuickAdd_Cancel' onclick='SC_QuickAdd_Close(false)'>";
 	quickAddDiv.innerHTML = html;
 	ShowDialog(quickAddDiv);
 	if (isNetscape)
@@ -1408,11 +1667,16 @@ function SC_QuickAdd_Close_Callback() {
 	sc_qac_timers = 0;
 	sc_qac_requests = 0;
 	sc_qac_works = false;
-	CHC_OnTableListChangedHandlerWithStoredParams();
-	GC_OnTableListChangedHandlerWithStoredParams();
-	CC_OnTableListChangedHandlerWithStoredParams();
-	SC_CheckGroupingAndFunctionsWithStoredParams();
-	EBC_CheckFieldsCountWithStoredParams();
+	if (typeof CHC_OnTableListChangedHandlerWithStoredParams === "function")
+		CHC_OnTableListChangedHandlerWithStoredParams();
+	if (typeof GC_OnTableListChangedHandlerWithStoredParams === "function")
+		GC_OnTableListChangedHandlerWithStoredParams();
+	if (typeof CC_OnTableListChangedHandlerWithStoredParams === "function")
+		CC_OnTableListChangedHandlerWithStoredParams();
+	if (typeof SC_CheckGroupingAndFunctionsWithStoredParams === "function")
+		SC_CheckGroupingAndFunctionsWithStoredParams();
+	if (typeof EBC_CheckFieldsCountWithStoredParams === "function")
+		EBC_CheckFieldsCountWithStoredParams();
 }
 
 function SC_QuickAdd_Keydown(evt)
@@ -1448,8 +1712,8 @@ function SC_ClearRowSelects(row)
 function SC_ChangeAllTablesSel(id, tables)
 {
 	var allTablesSel = document.getElementById(id + '_AllTables');
-	if(allTablesSel!=null)
-		EBC_ChangeAllTablesSel(tables, allTablesSel);
+	if (allTablesSel != null && tables != null && tables.join)
+		EBC_LoadData("UsedTableList", "tables=" + tables.join('\''), allTablesSel);
 }
 
 function SC_RemoveAllFields(id)
@@ -1490,7 +1754,6 @@ function SC_AfterArithmeticOperationChanged(e)
 	if (row==null)
 		return;
 	var operationElem = new AdHoc.MultivaluedCheckBox('ArithmeticOperation', row);
-	var justificationElem = new AdHoc.MultivaluedCheckBox('Justification', row);
 	var descriptionEdit = EBC_GetInputByName(row, 'Description');
 	var groupCheckbox = EBC_GetElementByName(row, 'Group', 'INPUT');
 	var orderCheckbox = EBC_GetElementByName(row, 'Order', 'INPUT');
@@ -1505,8 +1768,6 @@ function SC_AfterArithmeticOperationChanged(e)
 			descriptionEdit.value = "";
 			descriptionEdit.disabled = true;
 		}
-		if(justificationElem.ElementExists())
-			justificationElem.disable();
 		if(groupCheckbox != null && groupCheckbox)
 		{
 			groupCheckbox.checked = false;
@@ -1571,8 +1832,6 @@ function SC_AfterArithmeticOperationChanged(e)
 	{
 		if(descriptionEdit)
 			descriptionEdit.disabled = false;
-		if(justificationElem.ElementExists())
-			justificationElem.enable();
 		if(groupCheckbox != null && groupCheckbox)
 			groupCheckbox.disabled = false;
 		if(orderCheckbox)
@@ -1593,34 +1852,43 @@ function SC_AfterArithmeticOperationChanged(e)
 	SC_CallOnColumnFunctionChangeHandlers(id);
 }
 
-function SC_OnVisualGroupsCheckedHandler(e)
-{
-	if(e)
+function SC_OnVisualGroupsCheckedHandler(e) {
+	if (e) {
 		ebc_mozillaEvent = e;
+	}
 	var row = EBC_GetRow();
 	var orderCheckbox = EBC_GetElementByName(row, 'Order', 'INPUT');
 	var orderDescCheckbox = EBC_GetElementByName(row, 'OrderDesc', 'INPUT');
 	var masterCheckbox = EBC_GetElementByName(row, 'Master', 'INPUT');
 	var invisibleCheckbox = EBC_GetElementByName(row, 'Invisible', 'INPUT');
-	if(masterCheckbox.checked) {
-		if(orderCheckbox!=null && !orderCheckbox.checked && orderDescCheckbox!=null && !orderDescCheckbox.checked)
+	var pageBreakCheckbox = EBC_GetElementByName(row, 'BreakPage', 'INPUT');
+	if (masterCheckbox != null && masterCheckbox.checked) {
+		if (orderCheckbox != null && !orderCheckbox.checked && orderDescCheckbox != null && !orderDescCheckbox.checked) {
 			orderCheckbox.checked = true;
 	}
-	if (invisibleCheckbox!=null)
+	}
+	if (invisibleCheckbox != null) {
+		invisibleCheckbox.checked = false;
 		invisibleCheckbox.disabled = masterCheckbox.checked;
+	}
+	if (pageBreakCheckbox != null) {
+		pageBreakCheckbox.checked = false;
+		pageBreakCheckbox.disabled = !masterCheckbox.checked;
+	}
+	SC_CheckPropertiesModified(row);
 }
 
 function SC_OnDescriptionChangedHandler(e) {
   var emptyVal = false;
-	if(e)
-	{
+	if(e) {
 		ebc_mozillaEvent = e;
 		var element = e.target ? e.target : e.srcElement;
 		if (!(element.ChangedAutomatically)) {
 		  element.UserModified = true;
-		  if (element.value == '')
+			if (element.value == '') {
 		    emptyVal = true;
 		}
+	}
 	}
 	var row = EBC_GetRow();
 	if (emptyVal) {
@@ -1630,20 +1898,18 @@ function SC_OnDescriptionChangedHandler(e) {
 	SC_CallOnColumnFunctionChangeHandlers(id);
 }
 
-function SC_OnRemoveTableRow(id)
-{
+function SC_OnRemoveTableRow(id) {
 	SC_CallOnColumnFunctionChangeHandlers(id);
 	SC_CheckGroupingAndFunctions(id);
 }
 
-
 //var sc_properties_container;
 var sc_propsTable;
 var dialogRow;
-function SC_ShowProperties(e, sc_id)
-{
-	if(e)
+function SC_ShowProperties(e, sc_id) {
+	if (e) {
 		ebc_mozillaEvent = e;
+	}
 	dialogRow = EBC_GetRow();
 	var propsTable = EBC_GetElementByName(dialogRow, "PropertiesTable", "table");
 	var sc = document.getElementById(sc_id);
@@ -1652,86 +1918,61 @@ function SC_ShowProperties(e, sc_id)
 	sc_propsTable = ShowDialog(propsTable, null, null, top - 12, null, false);
 }
 
-function SC_CheckPropertiesModified(dialogRow)
-{
+function SC_CheckPropertiesModified(dialogRow) {
 	var result = false;
 	var propsTable = EBC_GetElementByName(dialogRow, "PropertiesTable", "table");
-	if (propsTable != null)
-	{
+	if (propsTable != null) {
 		var row = propsTable.rows;
-		for (var i=0;i<row.length && !result;i++)
-		{
+		for (var i = 0; i < row.length && !result; i++) {
 			var cell = row[i].cells[1];
-			if (cell != null)
-			{
+			if (cell != null) {
 				var element = cell.firstChild;
-				if (element != null)
-				{
+				if (element != null) {
 					var tagName = element.nodeName;
 					var elType = element.getAttribute("type");
-					if (tagName == "TABLE")
-					{
+					if (tagName == "TABLE") {
 						element = element.rows[0].cells[0].firstChild;
 						tagName = element.nodeName;
 						elType = element.getAttribute("type");
 					}
-					switch (tagName)
-					{
+					switch (tagName) {
 						case "INPUT":
-							{
-								switch (elType)
-								{
+							switch (elType) {
 									case "text":
-										{
 											var value = element.value;
 											var name = element.getAttribute("name");
-											if (name != null && value == "1" && (name.indexOf("_Coefficient") + 12 == name.length)) {
+											if (name != null && value == "1" && (name.indexOf("_Coefficient")+12 == name.length))
 												value = "";
-											}
 											result = !(value == null || value == "" || (value.indexOf("example") == 0));
-										}
 										break;
 									case "checkbox":
 										result = element.checked;
 										break;
 									case "hidden":
-										{
-											var value = element.value;
-											var defValue = element.getAttribute("data-default");
-											if (value && defValue && value != defValue && value != "&nbsp;")
-												result = true;
-											else
-												result = false;
-										}
+										var value = element.value;
+										var defValue = element.getAttribute("data-default");
+										result = (value && defValue && value != defValue && value != "&nbsp;");
 										break;
 								}
-							}
 							break;
 						case "SELECT":
-							{
 								var value = element.value;
 								result = !(value == null || value == "" || value == "..." || (value == "DEFAULT") || (value.indexOf("example") == 0));
-							}
 							break;
 						case "DIV":
-							{
 								var childNode = element.firstChild;
 								if (childNode.nodeName == "INPUT") {
 									var cnName = childNode.getAttribute("name");
-									if (cnName.indexOf('_LabelJustificationCurrentValue') >= 0) {
+									if (cnName.indexOf('_LabelJustificationCurrentValue') >= 0 || cnName.indexOf('_exvLabelJustificationCurrentValue') >= 0) {
 										result = (childNode.value != 'M');
-									}
-									else if (cnName.indexOf('_JustificationCurrentValue') >= 0) {
+									} else if (cnName.indexOf('_JustificationCurrentValue') >= 0 || cnName.indexOf('_exvJustificationCurrentValue') >= 0) {
 										result = (childNode.value != ' ' && childNode.value != String.fromCharCode(160));
 									}
 								}
-							}
 							break;
 						case "TEXTAREA":
-							{
 								var value = element.value;
 								result = !(value == null || value == "" || (value.indexOf("example") == 0));
-							}
 							break;
 					}
 				}
@@ -1743,8 +1984,9 @@ function SC_CheckPropertiesModified(dialogRow)
 	var index = src.indexOf("advanced-settings");
 	src = src.substring(0,index);
 	src += "advanced-settings";
-	if (result)
+	if (result) {
 		src += "-dot";
+	}
 	src += ".png";
 	button.setAttribute("src", src);
 	return result;
@@ -1755,7 +1997,13 @@ function SC_HideProperties(id)
 	HideDialog(sc_propsTable, false);
 	var row = EBC_GetRow(sc_propsTable);
 	SC_CheckPropertiesModified(row);
+	var expressionTypeSelect = EBC_GetSelectByName(row, "ExpressionType");
+	if (row != null && expressionTypeSelect) {
+		EBC_SetFormat(row, true);
+		EBC_SetFunctions(row);
+	}
 	SC_CallOnColumnFunctionChangeHandlers(id);
+	CC_UpdateFiltersFromLogic();
 }
 
 function SC_SubtotalFunctionChange(obj)

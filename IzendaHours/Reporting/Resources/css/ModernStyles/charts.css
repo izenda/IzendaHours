@@ -51,7 +51,7 @@
 .ui-dialog-titlebar .ui-state-hover .ui-icon,
 .ui-dialog-titlebar a.ui-dialog-titlebar-close.ui-state-hover .ui-icon-closethick,
 .ui-dialog-titlebar a.ui-dialog-titlebar-close .ui-icon-closethick {
-  background-image: url(rs.aspx?image=ModernImages.remove-icon.png) !important;
+  background-image: url(###RS###image=ModernImages.remove-icon.png) !important;
   background-position: 0 0;
   background-repeat: none;
 }

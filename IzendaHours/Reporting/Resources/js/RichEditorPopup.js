@@ -27,37 +27,37 @@ function RE_AjaxRequest(url, parameters, callbackSuccess, callbackError, id, dat
 	}
 }
 
+// Prevent jQuery UI dialog from blocking focusin
+jq$(document).on('focusin', function (e) {
+	if (jq$(e.target).closest(".mce-window, .moxman-window").length) {
+		e.stopImmediatePropagation();
+	}
+});
+
 function CreateTextareaPopup(baseId, width, height) {
-	var outerPopupDiv = document.createElement('div');
-	outerPopupDiv.id = baseId + '__outerPopupDiv';
-	outerPopupDiv.style.width = '100%';
-	outerPopupDiv.style.minHeight = '100%';
-	outerPopupDiv.style.overflow = 'hidden';
-	outerPopupDiv.style.position = 'fixed';
-	outerPopupDiv.style.top = '0px';
-	outerPopupDiv.style.zIndex = '999';
-	var innerPopupDiv = document.createElement('div');
-	innerPopupDiv.id = baseId + '__innerPopupDiv';
-	var topMargin = (jq$(window).height() - height) / 2;
-	innerPopupDiv.style.margin = topMargin + 'px auto 0px auto';
-	innerPopupDiv.style.width = width + 'px';
-	innerPopupDiv.style.height = height + 'px';
-	innerPopupDiv.style.padding = '2px';
-	innerPopupDiv.style.backgroundColor = '#C5C5C5';
-	var textArea = document.createElement('textarea');
-	textArea.id = baseId + '__textarea';
-	innerPopupDiv.appendChild(textArea);
-	outerPopupDiv.appendChild(innerPopupDiv);
-	document.getElementsByTagName('body')[0].appendChild(outerPopupDiv);
+	jq$('<div id="' + baseId + '_iz-richeditor-container"><textarea id="' + baseId + '__textarea"></textarea></div>').dialog({
+		width: width,
+		height: height + 80,
+		minWidth: 600,
+		minHeight: 300,
+		modal: true,
+		dialogClass: 'iz-richeditor-dialog',
+		resize: function (event, ui) {
+			jq$('#re_popup_win_01__textarea_ifr').css('height', (ui.size.height - 230) + 'px');
+		},
+		close: function (event, ui) {
+			if (typeof tinymce != 'undefined' && tinymce != null && tinymce.editors != null && tinymce.editors.length > 0)
+				RE_TerminateRichEditor(tinymce.editors[0]);
+			else
+				jq$(this).remove();
+		}
+	});
 }
 
 function DisposeTextareaPopup(baseId) {
-	var textArea = document.getElementById(baseId + '__textarea');
-	textArea.parentElement.removeChild(textArea);
-	var innerPopupDiv = document.getElementById(baseId + '__innerPopupDiv');
-	innerPopupDiv.parentElement.removeChild(innerPopupDiv);
-	var outerPopupDiv = document.getElementById(baseId + '__outerPopupDiv');
-	outerPopupDiv.parentElement.removeChild(outerPopupDiv);
+	jq$('#' + baseId + '_iz-richeditor-container')
+		.dialog('destroy')
+		.remove();
 }
 
 function RE_TerminateRichEditor(editor) {
@@ -74,9 +74,9 @@ function RE_EditorContentSent(returnObj, id, editorParamsObj) {
 	RE_TerminateRichEditor(tinymce.get(editorParamsObj.EditorId));
 }
 
-function RE_SaveRichEditorContent(editor) {
+function RE_SaveRichEditorContent(editor, deleteForm) {
 	var editorParamsObj = RE_EditorsParamsList[editor.settings.selector];
-	var content = editor.getContent({ format: 'raw' });
+	var content = deleteForm ? '' : editor.getContent({ format: 'raw' });
 	if (typeof editorParamsObj.ContentSaveCallback != 'undefined' && editorParamsObj.ContentSaveCallback != null)
 		editorParamsObj.ContentSaveCallback(content);
 	if (typeof editorParamsObj.ContentRequestMsg != 'undefined' && editorParamsObj.ContentRequestMsg != null && editorParamsObj.ContentRequestMsg != '') {
@@ -95,7 +95,7 @@ function RE_RichEditorBeforeExecCommandEvent(e) {
 		RE_TerminateRichEditor(editor);
 	}
 	else if (e.command == 'mceSave') {
-		RE_SaveRichEditorContent(editor);
+		RE_SaveRichEditorContent(editor, false);
 	}
 	else
 		return;
@@ -126,46 +126,144 @@ function RE_InstantiateRichEditor(paramsObj) {
 		editor = tinymce.get(RE_EditorsParamsList[paramsObj.TargetSelector].EditorId);
 	if (editor == null) {
 		RE_EditorsParamsList[paramsObj.TargetSelector] = paramsObj;
+		var lang = '';
+		if (typeof serverCulture != 'undefined' && serverCulture != null && serverCulture != '' && serverCulture != 'en-US')
+			lang = './rs.aspx?wscmd=tinymceresource&wsarg0=langjs&wsarg1=' + serverCulture;
 		tinymce.init({
+			forced_root_block: false,
+			force_p_newlines: false,
 			selector: paramsObj.TargetSelector,
-			width: paramsObj.Width,
 			height: paramsObj.Height,
 			mode: "exact",
-			plugins: "advlist anchor autolink charmap codemagic colorpicker contextmenu directionality fullscreen hr image importcss insertdatetime layer legacyoutput link lists nonbreaking noneditable pagebreak paste preview save searchreplace spellchecker tabfocus table template textcolor textpattern visualchars wordcount",
-			toolbar: "save cancel insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media | forecolor backcolor | codemagic",
+			plugins: "advlist anchor autolink charmap codemagic colorpicker contextmenu directionality fullscreen hr image insertdatetime layer legacyoutput link lists nonbreaking noneditable pagebreak paste preview save searchreplace tabfocus table template textcolor textpattern visualchars wordcount repeater jqueryspellchecker",
+			toolbar: "save cancel delete insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media | forecolor backcolor | codemagic | jqueryspellchecker | iz-fields iz-columns iz-subreports iz-tags | repeater-default repeater-adv",
 			skin_url: './rs.aspx?wscmd=tinymceresource&wsarg0=skincss&wsarg1=',
+			language_url : lang,
+			resize: false,
 			init_instance_callback: RE_InitializeEditorInstance,
-			setup: function (editor) {
-			    editor.on('BeforeSetContent', function (e) {
-			        if (e.content.length > 0) {
-			            RE_ContentSections = AdHoc.Utility.ExtractSpecialFormSections(e.content);
-			            e.content = RE_ContentSections.htmlSource;
-			        }
-			        else
-			            e.content = e.content;
-			    });
-			    editor.on('SaveContent', function (e) {
-			        e.content = e.content;
-			    });
-			    editor.on('SetContent', function (e) {
-			        if (RE_ContentSections !== null && e.wasProcessed)
-			            e.content = RE_ContentSections.formScriptSection + RE_ContentSections.visualizationSection + e.content;
-			        else
-			            e.content = e.content;
-			    });
-			}
+			setup: function(editor) {
+				editor.on('BeforeSetContent', function(e) {
+					if (e.content.length > 0) {
+						RE_ContentSections = AdHoc.Utility.ExtractSpecialFormSections(e.content);
+						e.content = RE_ContentSections.htmlSource;
+					}
+					else
+						e.content = e.content;
+				});
+				editor.on('SaveContent', function(e) {
+					e.content = e.content;
+				});
+				editor.on('SetContent', function(e) {
+					if (RE_ContentSections !== null && e.wasProcessed)
+						e.content = RE_ContentSections.formScriptSection + RE_ContentSections.visualizationSection + e.content;
+					else
+						e.content = e.content;
+				});
+				RE_InitToolbarItems(editor);
+			},
+			extended_valid_elements: "repeater[id],repeaterstart,repeaterend",
+			custom_elements: "~repeater,repeaterstart,repeaterend"
 		});
 	}
 	else {
 		var editorParamsObj = RE_EditorsParamsList[paramsObj.TargetSelector];
 		editorParamsObj.ContentData = paramsObj.ContentData;
 		editorParamsObj.ContentRequestMsg = paramsObj.ContentRequestMsg;
-		editorParamsObj.Width = paramsObj.Width;
 		editorParamsObj.Height = paramsObj.Height;
 		editorParamsObj.ContentSaveCallback = paramsObj.ContentSaveCallback;
 		editorParamsObj.ContentSaveRequestCallback = paramsObj.ContentSaveRequestCallback;
 		RE_InitializeEditorInstance(editor);
 	}
+}
+
+function RE_InitToolbarItems(editor) {
+	if (editor == null || editor.type != "setupeditor")
+		return;
+
+	// Fields descriptions
+	var fieldsItems = [];
+	try {
+		var fields = SC_GetFieldsList(fieldsId);
+		if (fields != null)
+			for (var i = 0; i < fields.length; i++)
+				fieldsItems.push({ text: fields[i].description, onclick: function () { editor.insertContent('[' + this._text + ']'); } });
+	} catch (e) { }
+
+	editor.addButton('iz-fields', {
+		type: 'splitbutton',
+		text: fdtField,
+		icon: false,
+		onclick : function() {
+			editor.insertContent('[]');
+		},
+		menu: fieldsItems
+	});
+
+	editor.addButton('delete', {
+	  type: 'button',
+	  text: fdtDelete,
+	  icon: false,
+	  onclick: function () { RE_SaveRichEditorContent(editor, true); }
+	});
+
+	// Columns
+	var columnItems = [];
+	try {
+		var tempSelect = jq$(jq$('#' + fieldsId + ' select[name$="Column"]')[0]);
+		var currentGroup = "";
+		tempSelect.find('option').each(function (idx, e) {
+			if (e.text != null && e.text != '' && e.text != '...') {
+				if (currentGroup != e.getAttribute('optgroup')) {
+					columnItems.push({ text: e.getAttribute('optgroup'), disabled: true });
+					currentGroup = e.getAttribute('optgroup');
+				}
+				columnItems.push({ text: e.text, onclick: function () { editor.insertContent('[' + this._text + ']'); } });
+			}
+		});
+	} catch (e) { }
+
+	editor.addButton('iz-columns', {
+		type: 'splitbutton',
+		text: fdtColumn,
+		icon: false,
+		onclick: function () {
+			editor.insertContent('[]');
+		},
+		menu: columnItems
+	});
+
+	// Subreports
+	var subreportsItems = []
+	try {
+		var tempSelect = jq$(jq$('#' + fieldsId + ' select[name$="Subreport"]')[0]);
+		tempSelect.find('option').each(function (idx, e) {
+			if (e.text != null && e.text != '' && e.text != '...' && e.value != null && e.value != "(AUTO)")
+				subreportsItems.push({ text: e.text, onclick: function () { editor.insertContent('[[' + this._text + ']]'); } });
+		});
+	} catch (e) { }
+
+	editor.addButton('iz-subreports', {
+		type: 'splitbutton',
+		text: fdtSubreport,
+		icon: false,
+		onclick: function () {
+			editor.insertContent('[[]]');
+		},
+		menu: subreportsItems
+	});
+
+	// Smart tags
+	editor.addButton('iz-tags', {
+		type: 'splitbutton',
+		text: fdtSmartTag,
+		icon: false,
+		menu: [
+			{ text: fdtFilters, onclick: function () { editor.insertContent('[Filters]'); } },
+			{ text: fdtDate, onclick: function () { editor.insertContent('[Date]'); } },
+			{ text: fdtSubtotal, onclick: function () { editor.insertContent('[@Subtotal]'); } },
+			{ text: fdtRepeater, onclick: function () { editor.insertContent('[Repeater][/Repeater]'); } }
+		]
+	});
 }
 
 function RE_AcceptEditorContent(returnObj, id, paramsObj) {
@@ -199,12 +297,11 @@ function RE_ShowRichEditor(targetSelector, width, height, contentData, contentRe
 	paramsObj.TargetSelector = targetSelector;
 	paramsObj.ContentData = contentData;
 	paramsObj.ContentRequestMsg = contentRequestMsg;
-	paramsObj.Width = width;
 	paramsObj.Height = height;
 	paramsObj.ContentSaveCallback = contentSaveCallback;
 	paramsObj.ContentSaveRequestCallback = contentSaveRequestCallback;
 	if (!RE_EditorScriptsLoaded) {
-	    var requestString = 'wscmd=tinymceresource&wsarg0=editorcorejs&wsarg1=advlist,anchor,autolink,charmap,codemagic,colorpicker,contextmenu,directionality,fullscreen,hr,image,importcss,insertdatetime,layer,legacyoutput,link,lists,nonbreaking,noneditable,pagebreak,paste,preview,save,searchreplace,spellchecker,tabfocus,table,template,textcolor,textpattern,visualchars,wordcount';
+	  var requestString = 'wscmd=tinymceresource&wsarg0=editorcorejs&wsarg1=advlist,anchor,autolink,charmap,codemagic,colorpicker,contextmenu,directionality,fullscreen,hr,image,importcss,insertdatetime,layer,legacyoutput,link,lists,nonbreaking,noneditable,pagebreak,paste,preview,save,searchreplace,jqueryspellchecker,tabfocus,table,template,textcolor,textpattern,visualchars,wordcount,repeater';
 	    RE_AjaxRequest('./rs.aspx', requestString, RE_InjectEditorScripts, null, 'tinymceresource_editorcorejs', paramsObj);
 	}
 	else

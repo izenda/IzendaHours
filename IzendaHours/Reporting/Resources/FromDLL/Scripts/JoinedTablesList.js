@@ -1,10 +1,10 @@
-/* Copyright (c) 2005-2010 Izenda, L.L.C.
+/* Copyright (c) 2005 Izenda, Inc.
 
  ____________________________________________________________________
 |                                                                   |
 |   Izenda .NET Component Library                                   |
 |                                                                   |
-|   Copyright (c) 2005-2010 Izenda, L.L.C.                          |
+|   Copyright (c) 2005 Izenda, Inc.                                 |
 |   ALL RIGHTS RESERVED                                             |
 |                                                                   |
 |   The entire contents of this file is protected by U.S. and       |
@@ -216,9 +216,8 @@ function JTC_SelectRightTableSelValue(id, rowIndex)
 	rightTableSel.setAttribute("oldValue", EBC_GetSelectValue(rightTableSel));
 }
 
-function JTC_GetTableList(id)
-{
-	var tableSels = document.getElementsByName(id + '_Table');
+function JTC_GetTableList(id) {
+	var tableSels = jq$('[name="' + id + '_Table"]').not('[additional="true"]');
 	
 	var tables = new Array();
 	for (var i = 0; i < tableSels.length; i++)
@@ -313,12 +312,13 @@ function JTC_ShowHideParams(e)
 	JTC_innerShowHideParams(row, hideRightTable, '2');
 	JTC_innerShowHideParams(row, hideJoinType, '3');
 	JTC_CheckAliases(EBC_GetParentTable(row).id);
+	JTC_UpdateAdditionalConditionsElem(row, 'Join');
 }
 
 function JTC_TableChanged(e)
 {
 	if(e) ebc_mozillaEvent = e;
-	var row = EBC_GetRow();
+	var row = EBC_GetRow(e instanceof HTMLElement ? e : undefined);
 	
 	if (row == null || row.parentNode == null || row.parentNode.parentNode == null)
 		return;
@@ -389,7 +389,8 @@ function JTC_TableChanged(e)
 				JTC_SetRightTableSelValues(tableId, i , tablesWithAliases)
 				JTC_leftAutoJoinQueue[i] = 1;
 				// Update Right table and join Fields
-				JTC_SelectRightTableSelValue(tableId, i);
+				if (i == startFrom)
+					JTC_SelectRightTableSelValue(tableId, i);
 			}
 			finally
 			{
@@ -404,6 +405,7 @@ function JTC_TableChanged(e)
 			}
 		}
 	}
+	JTC_UpdateAdditionalConditions(row);
 	JTC_CheckAliases(tableId);
 	JTC_OnListChanged(tableId);
 }
@@ -419,7 +421,7 @@ function JTC_LeftColumnChanged(e)
 function JTC_RightTableChanged(e)
 {
 	if(e) ebc_mozillaEvent = e;
-	var row = EBC_GetRow();
+	var row = EBC_GetRow(e instanceof HTMLElement ? e : undefined);
 	var tableId = EBC_GetParentTable(row).id;
 	
 	var columnSels = EBC_GetSelectByName(row, 'Column');
@@ -446,6 +448,8 @@ function JTC_RightTableChanged(e)
 		rightTableSels.onchange = JTC_RightTableChanged;
 		rightColumnSel.onchange = JTC_RightColumnChanged;
 	}
+
+	JTC_UpdateAdditionalConditions(row);
 
 	JTC_CheckAliases(tableId);
 }
@@ -500,8 +504,8 @@ function JTC_OnListChanged(id) {
 	if (handlers != null)
 	{
 		for (var i = 0; i < handlers.length; i++)
-			handlers[i].func(handlers[i].id, tables);
-  }
+			handlers[i].func(handlers[i].id, tables, true);
+	}
 }
 
 function getEnd(source, len)
@@ -651,13 +655,134 @@ function JTC_Internal_FindEqualColumns(row) {
 	return flag;
 }
 
+function JTC_AliasChanged(e) {
+	if (e) ebc_mozillaEvent = e;
+	var row = EBC_GetRow(e instanceof HTMLElement ? e : undefined);
+	if (row == null)
+		return;
+
+	var baseRow = jq$(row);
+
+	var additionalConditionRow = baseRow.next();
+	while (jq$(additionalConditionRow).attr('additional') == 'true') {
+		var additionalAlias = additionalConditionRow.find('input[name$="_TableAlias"]');
+		additionalAlias.val(baseRow.find('input[name$="_TableAlias"]').val());
+		additionalConditionRow = jq$(additionalConditionRow).next();
+	}
+}
+
+function JTC_AddCondition(e) {
+	if (e) ebc_mozillaEvent = e;
+	var row = EBC_GetRow(e instanceof HTMLElement ? e : undefined);
+	if (row == null)
+		return;
+
+	var newRow = jq$(row).clone();
+	newRow.attr('additional', 'true');
+
+	var leftTableSel = newRow.find('select[name$="_Table"]');
+	leftTableSel.attr('additional', 'true')
+				.prop('disabled', 'disabled')
+				.val(jq$(row).find('select[name$="_Table"]').val())
+				.next('input[name$="_Additional"]').val("true");
+	newRow.find('select[name$="_RightTable"]')
+		  .attr('additional', 'true')
+		  .prop('disabled', 'disabled')
+		  .val(jq$(row).find('select[name$="_RightTable"]').val());
+	newRow.find('select[name$="_Join"]')
+		  .attr('additional', 'true')
+		  .prop('disabled', 'disabled')
+		  .val(jq$(row).find('select[name$="_Join"]').val());
+	newRow.find('input[name$="_TableAlias"]')
+		  .attr('additional', 'true')
+		  .prop('disabled', 'disabled');
+
+	newRow.find('select[name$="ConditionOperator"]').parent().show();
+
+	newRow.find('img[name$="InsertAboveBtn"]').hide();
+	newRow.find('img[name$="InsertBelowBtn"]').hide();
+	newRow.find('img[name$="AddConditionBtn"]').hide();
+
+	var rowWithLastCondition = row;
+	while (jq$(rowWithLastCondition).next().attr('additional') == 'true') {
+		rowWithLastCondition = jq$(rowWithLastCondition).next();
+	}
+
+	newRow.insertAfter(rowWithLastCondition);
+}
+
+function JTC_RemoveConditions(row) {
+	var baseRow = jq$(row);
+	var additionalConditionRow = baseRow.next();
+	while (jq$(additionalConditionRow).attr('additional') == 'true') {
+		var nextRow = jq$(additionalConditionRow).next();
+		jq$(additionalConditionRow).remove();
+		additionalConditionRow = nextRow;
+	}
+}
+
+function JTC_UpdateAdditionalConditions(row) {
+	var baseRow = jq$(row);
+
+	var additionalConditionRow = baseRow.next();
+	while (jq$(additionalConditionRow).attr('additional') == 'true') {
+		var additionalTable = additionalConditionRow.find('select[name$="_Table"]');
+		additionalTable.val(baseRow.find('select[name$="_Table"]').val());
+		JTC_TableChanged(additionalTable[0]);
+
+		var additionalRightTable = additionalConditionRow.find('select[name$="_RightTable"]');
+		additionalRightTable.val(baseRow.find('select[name$="_RightTable"]').val());
+		JTC_RightTableChanged(additionalRightTable[0]);
+
+		var additionalAlias = additionalConditionRow.find('input[name$="_TableAlias"]');
+		additionalAlias.val(baseRow.find('input[name$="_TableAlias"]').val());
+
+		additionalConditionRow.find('select[name$="_Join"]').val(baseRow.find('select[name$="_Join"]').val());
+		additionalConditionRow = jq$(additionalConditionRow).next();
+	}
+}
+
+function JTC_UpdateAdditionalConditionsElem(row, elemName) {
+	var baseRow = jq$(row);
+	var additionalConditionRow = baseRow.next();
+	while (jq$(additionalConditionRow).attr('additional') == 'true') {
+		additionalConditionRow.find('select[name$="_' + elemName + '"]').val(baseRow.find('select[name$="_' + elemName + '"]').val());
+		additionalConditionRow = jq$(additionalConditionRow).next();
+	}
+}
+
+function JTC_InsertDataSourceBelow(e) {
+	if (e) ebc_mozillaEvent = e;
+	var row = EBC_GetRow(e instanceof HTMLElement ? e : undefined);
+
+	var selectionIndex = row["sectionRowIndex"];
+	var rowWithLastCondition = row;
+	while (jq$(rowWithLastCondition).next().attr('additional') == 'true') {
+		rowWithLastCondition = jq$(rowWithLastCondition).next();
+		selectionIndex++;
+	}
+
+	jq$(row.parentNode).find('input[name$="_TableAlias"]:not([alwayshide="true"])').parent().show();
+	jq$(row).closest('table').find('span.alias-header').show();
+
+	EBC_internalInsertHandler(row, selectionIndex + 1, null);
+}
+
+
 function JTC_RemoveHandler(e)
 {
-	if(e) ebc_mozillaEvent = e;
-	var table = EBC_GetParentTable(EBC_GetRow());
+	if (e) ebc_mozillaEvent = e;
+	var row = EBC_GetRow(e instanceof HTMLElement ? e : undefined);
+	JTC_RemoveConditions(row);
+	var table = EBC_GetParentTable(row);
 	EBC_RemoveHandler(ebc_mozillaEvent);
 	JTC_CheckAliases(table.id);
 	JTC_OnListChanged(table.id);
+
+	if (JTC_oldTableList.length < 2) {
+		jq$(table).find('input[name$="_TableAlias"]').parent().hide();
+		jq$(table).find('span.alias-header').hide();
+	}
 }
 
 function JTC_InitRow(row)

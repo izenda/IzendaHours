@@ -1,10 +1,10 @@
-/* Copyright (c) 2005-2010 Izenda, L.L.C.
+/* Copyright (c) 2005 Izenda, Inc.
 
  ____________________________________________________________________
 |                                                                   |
 |   Izenda .NET Component Library                                   |
 |                                                                   |
-|   Copyright (c) 2005-2010 Izenda, L.L.C.                          |
+|   Copyright (c) 2005 Izenda, Inc.                                 |
 |   ALL RIGHTS RESERVED                                             |
 |                                                                   |
 |   The entire contents of this file is protected by U.S. and       |
@@ -252,7 +252,7 @@ function GC_TargetReportChanged(e)
 	{
 		var value = e.value;
 		var visible = (value != "..." && value != "" && value != null);
-		for (var i=2;i<4;i++)
+		for (var i = 2; i < 4; i++)
 		{
 			row.cells[i].style.visibility = (visible ? "" : "hidden");
 		}

@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="~/Reporting/Resources/css/ModernStyles/reset2.css" type="text/css" />
     <link rel="stylesheet" href="~/Reporting/Resources/css/ModernStyles/print.css" type="text/css" media="print" />
     <link rel="stylesheet" href="~/Reporting/Resources/css/ModernStyles/fun.css" type="text/css" />
-    <link rel="stylesheet" href="~/Reporting/Resources/css/ModernStyles/main.css" type="text/css" />
+    <link rel="stylesheet" href="~/Reporting/Resources/css/newmain.css" type="text/css" />
     
     <link rel="shortcut icon" href="~/Reporting/Resources/FromDLL/Resources/ModernImages/report-icon.png" type='image/png' />
     
@@ -128,7 +128,7 @@
                             <a class="dropdown-toggle" data-toggle="dropdown" href='@Url.Action("ReportDesigner", "Reporting", new { clear = 1, tab = "Data+Sources" })'>New<b class="caret"></b></a>
                             <ul class="dropdown-menu" role="menu">
                                 <li>@Html.ActionLink("Report", "ReportDesigner", "Reporting", new { clear = 1, tab = "Data+Sources" }, null)</li>
-                                @*<li>@Html.ActionLink("Instant Report", "InstantReport", "Reporting")</li>*@
+                                <li>@Html.ActionLink("Instant Report", "InstantReportNew", "Reporting")</li>
                                 <li>@Html.ActionLink("Dashboard", "Dash", "Reporting")</li>
                             </ul>
                         </li>
@@ -140,7 +140,7 @@
         </div>
     </div>
 
-    <div>
+    <div class="izenda-bs">
         <div id="dashLoadingVg" style="text-align: center; width:100%; height:100%; top:130px; left:0; background-color: #FFFFFF; z-index: 8000; display: none;">
             <div id="loadingWordDb" style="font-size: 20px;margin-left: 70px;color:#1D5987;font-family:Verdana,Arial,Helvetica,sans-serif;font-weight:normal !important;font-style: normal;">Loading...</div>
             <img id="limgDb" style="margin-left: 70px; margin-top:40px;" src="@Url.Content("~/Reporting/rs.aspx?image=loading.gif")" alt="" />

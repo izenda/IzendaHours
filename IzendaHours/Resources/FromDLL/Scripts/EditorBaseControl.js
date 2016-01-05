@@ -1,10 +1,10 @@
-/* Copyright (c) 2005-2010 Izenda, L.L.C.
+/* Copyright (c) 2005 Izenda, Inc.
 
  ____________________________________________________________________
 |                                                                   |
 |   Izenda .NET Component Library                                   |
 |                                                                   |
-|   Copyright (c) 2005-2010 Izenda, L.L.C.                          |
+|   Copyright (c) 2005 Izenda, Inc.                                 |
 |   ALL RIGHTS RESERVED                                             |
 |                                                                   |
 |   The entire contents of this file is protected by U.S. and       |
@@ -57,7 +57,6 @@ function urldecode(s) {
 }
 
 function EBC_Init(responseServerUrl, count, useDefaultDialogs, timeOut) {
-  var t = "?";
 	quantityOfCallsInvalidate = count;
 	UseDefaultDialogs = useDefaultDialogs;
 	responseServer = new AdHoc.ResponseServer(responseServerUrl, timeOut);
@@ -72,7 +71,7 @@ function EBC_RegisterControl(id)
 
 function EBC_ClearContols()
 {
-	for(var i=0; i<ebc_controls.length; i++)
+	for (var i = 0; i < ebc_controls.length; i++)
 		EBC_RemoveAllRows(ebc_controls[i]);
 }
 
@@ -80,10 +79,9 @@ function EBC_internalSetName(elem, n, undo)
 {
 	if (elem.name != null)
 	{
-		if(undo)
-			elem.name = elem.name.substring(0, elem.name.length - n.toString().length);
-		else
-			elem.name = elem.name + n.toString();
+		elem.name = undo
+			? elem.name.substring(0, elem.name.length - n.toString().length)
+			: elem.name + n.toString();
 	}
 	var children = elem.childNodes;
 	if (children != null)
@@ -98,28 +96,30 @@ function EBC_RenameControls(undo)
 	for (var i = 0; i < ebc_controls.length; i++)
 	{
 		var rows = jq$('#' + ebc_controls[i] + ' > tbody > tr');
-	    if (rows == null || rows.length == 0)
-	        continue;
+		if (rows == null || rows.length == 0)
+			continue;
 
-	    for (var j = 0; j < rows.length; j++) {
-	        var children = rows[j].childNodes;
-	        if (children != null)
-	            for (var k = 0; k < children.length; k++)
-	                EBC_internalSetName(children[k], j, undo);
-	    }
+		for (var j = 0; j < rows.length; j++) {
+			var children = rows[j].childNodes;
+			if (children == null)
+				continue;
+
+			for (var k = 0; k < children.length; k++)
+				EBC_internalSetName(children[k], j, undo);
+		}
 	}
 }
 
 function EBC_SubmitHandler(evt)
 {
-	if(ebc_controlsRenamed)
+	if (ebc_controlsRenamed)
 		return;
 		
-	if(ebc_cancelSubmiting)
+	if (ebc_cancelSubmiting)
 	{
 		evt = evt == null ? event : evt;
 		ebc_cancelSubmiting = false;
-		if(!isNetscape)
+		if (!isNetscape)
 		{
 			event.cancelBubble = true;
 			event.returnValue = false;
@@ -133,7 +133,7 @@ function EBC_SubmitHandler(evt)
 	}
 	ebc_controlsRenamed = true;
 	if (AdHoc.ResponseServer.CallBeforeSubmitHandlers == null || !AdHoc.ResponseServer.CallBeforeSubmitHandlers())
-	    EBC_RenameControls();
+		EBC_RenameControls();
 }
 
 function EBC_FormSubmit()
@@ -175,19 +175,17 @@ function EBC_OnServerResponse(url, xmlHttpRequest, arg, additionalData)
 	currentRequests--;
 	if (xmlHttpRequest.status == 200)
 	{
-		var data = xmlHttpRequest.responseText;
-		if(!data || data.match(/^<opt(?:ion|group)/))
-		{
-			if(EBC_SetData != null)
+		var data = xmlHttpRequest.responseText, wait = ebc_wait[arg.path + arg.params];
+		if (!data || data.match(/^<opt(?:ion|group)/)) {
+			if (EBC_SetData != null)
 				EBC_SetData(arg.path + arg.params, data, additionalData);
 		}
-		else if (data.match(/^<table/))
-		{
+		else if (data.match(/^<table/)) {
 			ebc_data[arg.path + arg.params] = data;
 			ebc_wait[arg.path + arg.params] = null;
-	  }
-	  else if (data.indexOf("###USEPAGE###") != -1) {
-	    ebc_data[arg.path + arg.params] = data;
+		}
+		else if (data.indexOf("###USEPAGE###") != -1) {
+			ebc_data[arg.path + arg.params] = data;
 			ebc_wait[arg.path + arg.params] = null;
 		}
 		else {
@@ -195,14 +193,13 @@ function EBC_OnServerResponse(url, xmlHttpRequest, arg, additionalData)
 			ebc_wait[arg.path + arg.params] = null;
 			eval(data);
 		}
-		if(currentRequests==0)
-		{
-			if(window.ebc_disableEnableFunctions)
-				for(var i = 0; i < ebc_disableEnableFunctions.length; i++)
+		if (currentRequests == 0) {
+			if (window.ebc_disableEnableFunctions)
+				for (var i = 0; i < ebc_disableEnableFunctions.length; i++)
 					ebc_disableEnableFunctions[i](true);
 		}
 		if (arg.callbackFunction)
-			arg.callbackFunction(data);
+			arg.callbackFunction(data, wait);
 	}
 	if (typeof sc_qac_works != 'undefined' && sc_qac_works != null && sc_qac_works == true) {
 		sc_qac_requests--;
@@ -210,53 +207,51 @@ function EBC_OnServerResponse(url, xmlHttpRequest, arg, additionalData)
 	}
 }
 
-function EBC_SetOffsetForSheduler(timeOffset)
-{
-	if (typeof(EBC_TimeZone)!='undefined' && timeOffset != 0)
+function EBC_SetOffsetForSheduler(timeOffset) {
+	if (typeof(EBC_TimeZone) == 'undefined' || timeOffset == 0)
+		return;
+
+	for (var i = 0;i<EBC_TimeZone.length;i++)
 	{
-		for (var i = 0;i<EBC_TimeZone.length;i++)
+		var controlID = EBC_TimeZone[i];
+		var control = document.getElementById(controlID);
+		if (control == null)
+			continue;
+
+		var row = control;
+		while (row != null && row.tagName != 'TR')
+			row = row.parentNode;
+
+		control.value = timeOffset;
+		var hour = EBC_GetElementByName(row, "Hour", "INPUT");
+		var minute = EBC_GetElementByName(row, "Minute", "INPUT");
+		var ampm = EBC_GetElementByName(row, "Ampm", "SELECT");
+		var day = EBC_GetElementByName(row, "Day", "SELECT");
+		var month = EBC_GetElementByName(row, "Month", "SELECT");
+		var year = EBC_GetElementByName(row, "Year", "SELECT");
+
+		var hourValue = (1*hour.value);
+		if (hourValue == 12)
+			hourValue = 0;
+		hourValue += (ampm.value == "PM" ? 12 : 0);
+
+		var minuteValue = (1*minute.value) + timeOffset;
+		var date = new Date(year.value, month.value-1, day.value, hourValue, minuteValue);
+		if (date == NaN)
+			continue;
+
+		year.value = date.getYear();
+		month.value = date.getMonth()+1;
+		day.value = date.getDate();
+		hourValue = date.getHours();
+		ampm.value = "AM";
+		if (hourValue > 11)
 		{
-			var controlID = EBC_TimeZone[i];
-			var control = document.getElementById(controlID);
-			if (control != null)
-			{
-				var row = control;
-				while (row != null && row.tagName != 'TR')
-					row = row.parentNode;
-				control.value = timeOffset;
-				var hour = EBC_GetElementByName(row, "Hour", "INPUT");
-				var minute = EBC_GetElementByName(row, "Minute", "INPUT");
-				var ampm = EBC_GetElementByName(row, "Ampm", "SELECT");
-				var day = EBC_GetElementByName(row, "Day", "SELECT");
-				var month = EBC_GetElementByName(row, "Month", "SELECT");
-				var year = EBC_GetElementByName(row, "Year", "SELECT");
-				
-				var hourValue = (1*hour.value);
-				if (hourValue == 12)
-					hourValue = 0;
-				hourValue += (ampm.value == "PM" ? 12 : 0)
-				
-				var minuteValue = (1*minute.value) + timeOffset;
-				
-				var date = new Date(year.value, month.value-1, day.value, hourValue, minuteValue);
-				
-				if (date != NaN)
-				{
-					year.value = date.getYear();
-					month.value = date.getMonth()+1;
-					day.value = date.getDate();
-					hourValue = date.getHours();
-					ampm.value = "AM";
-					if (hourValue > 11)
-					{
-						ampm.value = "PM";
-						hourValue -= 12;
-					}
-					hour.value = hourValue;
-					minute.value = date.getMinutes();
-				}
-			}
+			ampm.value = "PM";
+			hourValue -= 12;
 		}
+		hour.value = hourValue;
+		minute.value = date.getMinutes();
 	}
 }
 
@@ -285,43 +280,93 @@ function EBC_CallServer(path, params, async, callbackFunction, additionalData)
 	currentRequests++;
 }
 
+function UriEncodeParamValue(paramsStr, nameToEncode) {
+  var params = paramsStr;
+  var curInd = params.indexOf(nameToEncode + '=');
+  if (curInd >= 0 && (curInd == 0 || params[curInd - 1] == '&' || params[curInd - 1] == '?')) {
+    var startTbls = curInd + nameToEncode.length + 1;
+    curInd = startTbls;
+    while (curInd < params.length && params[curInd] != '=')
+      curInd++;
+    var finishTbls;
+    if (curInd >= params.length)
+      finishTbls = curInd - 1;
+    else {
+      while (curInd > startTbls && params[curInd] != '&')
+        curInd--;
+      finishTbls = curInd - 1;
+    }
+    if (finishTbls > startTbls) {
+      var encodedTables = encodeURIComponent(params.substr(startTbls, finishTbls - startTbls + 1));
+      var paramsHead = params.substr(0, startTbls);
+      var paramsTail = '';
+      if (finishTbls < params.length - 1)
+        paramsTail = params.substr(finishTbls + 1);
+      params = paramsHead + encodedTables + paramsTail;
+    }
+  }
+  return params;
+}
+
 function EBC_LoadData(path, params, sel, async, callbackFunction, additionalData)
 {
-	if (params==null)
-		params = "";
-	var data = ebc_data[path+params];
+	if (params == null)
+	  params = "";
+	params = UriEncodeParamValue(params, 'tables');
+	params = UriEncodeParamValue(params, 'columnName');
+	var tblCnt = -1;
+	var paramsOld = '';
+	while (paramsOld != params) {
+	  paramsOld = params;
+	  tblCnt++;
+	  params = UriEncodeParamValue(params, 'tbl' + tblCnt);
+	}
+	var fcCnt = -1;
+	paramsOld = '';
+	while (paramsOld != params) {
+	  paramsOld = params;
+	  fcCnt++;
+	  params = UriEncodeParamValue(params, 'fc' + fcCnt);
+	}
+	var data = ebc_data[path + params];
 	if (data != null) {
-		var result = null;
 		if (additionalData != null)
 			data = data + additionalData;
 		sel = EBC_SetSelectContent(sel, data);
-		if (sel!=null)
+		if (sel != null)
 			sel.Loading = false;
 		if (callbackFunction)
 			callbackFunction(sel != null ? sel : data);
 		return sel != null ? sel : data;
 	}
-	if(async==null)
+	if (async == null)
 		async = true;
-	var objs = ebc_wait[path+params];
+	var objs = ebc_wait[path + params];
 	var newPath = false;
-	
-	if (objs == null)
-	{
+
+	if (objs == null) {
 		objs = new Array();
-		ebc_wait[path+params] = objs;
+		ebc_wait[path + params] = objs;
 		newPath = true;
 	}
 	var obj = {};
 	obj.sel = sel;
-    if (sel != null)
-	    obj.sel.urlKey = '#' + path + '#' + params + '#';
+	if (sel != null)
+		obj.sel.urlKey = '#' + path + '#' + params + '#';
 	obj.urlKey = '#' + path + '#' + params + '#';
+	obj.callback = callbackFunction;
 	objs.push(obj);
-	
-	if (newPath)
-	{
-		EBC_CallServer(path, params, async, callbackFunction, additionalData);
+
+	if (newPath) {
+		EBC_CallServer(path, params, async, function (d, wait) {
+			if (!wait || typeof wait.length == "undefined")
+				return;
+
+			for (var i = 0 ; i < wait.length; i++) {
+				if (typeof wait[i].callback == "function")
+					wait[i].callback(d);
+			}
+		}, additionalData);
 	}
 }
 
@@ -332,45 +377,45 @@ function EBC_SetData(path, data, additionalData)
 		totalData = totalData + additionalData;		
 	ebc_data[path] = data;
 	var objs = ebc_wait[path];
-	if (objs != null)
-		for (var i = 0; i < objs.length; i++)
-		    if (objs[i] != null && objs[i].sel != null)
-			{
-				var sel = objs[i].sel;
-				if (objs[i].urlKey == sel.urlKey) {
-					sel = EBC_SetSelectContent(sel, totalData);
-					if (sel != null)
-						sel.Loading = false;
-				}
-			}
+	if (objs == null)
+		return;
+
 	ebc_wait[path] = null;
+	for (var i = 0; i < objs.length; i++) {
+		if (objs[i] == null || objs[i].sel == null)
+			continue;
+		var sel = objs[i].sel;
+		if (objs[i].urlKey != sel.urlKey)
+			continue;
+		sel = EBC_SetSelectContent(sel, totalData);
+		if (sel != null)
+			sel.Loading = false;
+	}
 }
 
-function EBC_LoadTableInfo()
-{
-	if(ebc_tableInfo==null)
-		responseServer.ExecuteCommand("GetKeysInfo", "", true, function (url, xmlHttpRequest)
-			{
-				if (xmlHttpRequest.status==200)
-					eval(xmlHttpRequest.responseText);
-			}
-		)
+function EBC_LoadTableInfo() {
+	if (ebc_tableInfo != null)
+		return;
+	responseServer.ExecuteCommand("GetKeysInfo", "", true, function (url, xmlHttpRequest) {
+		if (xmlHttpRequest.status == 200)
+			eval(xmlHttpRequest.responseText);
+	});
 }
 
 function EBC_LoadConstraints() {
-  if (ebc_constraintsInfo == null)
-    responseServer.ExecuteCommand("GetConstraintsInfo", "", false, function(url, xmlHttpRequest) {
-      if (xmlHttpRequest.status == 200)
-        eval(xmlHttpRequest.responseText);
-    }
-		)
+	if (ebc_constraintsInfo != null)
+		return;
+	responseServer.ExecuteCommand("GetConstraintsInfo", "", false, function (url, xmlHttpRequest) {
+		if (xmlHttpRequest.status == 200)
+			eval(xmlHttpRequest.responseText);
+	});
 }
 
 function EBC_AnalyzeCopyPaste(values) {
-  responseServer.ExecuteCommandOnData("AnalyzeCopyPaste", "", false, function(url, xmlHttpRequest) {
-      if (xmlHttpRequest.status == 200)
-        eval(xmlHttpRequest.responseText);
-    }, "", "", values)
+	responseServer.ExecuteCommandOnData("AnalyzeCopyPaste", "", false, function (url, xmlHttpRequest) {
+		if (xmlHttpRequest.status == 200)
+			eval(xmlHttpRequest.responseText);
+	}, "", "", values);
 }
 
 function EBC_SetTableInfo(info)
@@ -438,32 +483,32 @@ function EBC_FireOnChange(sel)
 	//sel.onchangeRaisedManually = true;
 	//try
 	//{
-		if(isNetscape)
-		{
-			var e = document.createEvent("HTMLEvents");
-			e.initEvent("change", true, false);
-			try {
-				sel.dispatchEvent(e);
-			} catch(exception) {
-			}
-			e = document.createEvent("HTMLEvents");
-			e.initEvent("resize", true, false);
-			document.documentElement.dispatchEvent(e);
+	if (isNetscape)
+	{
+		var e = document.createEvent("HTMLEvents");
+		e.initEvent("change", true, false);
+		try {
+			sel.dispatchEvent(e);
 		}
-		else
-		{
-			var eventObj = document.createEventObject();
-			eventObj.propertyName = '1';
-			if(sel.disabled && sel.onchange!=null)
-				sel.onchange(eventObj);
-			if (sel.fireEvent != null)
-			try
-			{
+		catch (ex) { }
+		e = document.createEvent("HTMLEvents");
+		e.initEvent("resize", true, false);
+		document.documentElement.dispatchEvent(e);
+	}
+	else
+	{
+		var eventObj = document.createEventObject();
+		eventObj.propertyName = '1';
+		if (sel.disabled && sel.onchange != null)
+			sel.onchange(eventObj);
+		if (sel.fireEvent != null) {
+			try {
 				sel.fireEvent("onchange", eventObj);
 			}
-			catch(except) {}
-			document.documentElement.fireEvent('onresize');
+			catch (ex) { }
 		}
+		document.documentElement.fireEvent('onresize');
+	}
 	//} 
 	//finally { sel.onchangeRaisedManually = false;}
 }
@@ -537,40 +582,44 @@ function EBC_SetSelectedIndexByValue(sel, value)
 
 function EBC_PrepareNewRow(row)
 {
-	var selElems = row.getElementsByTagName('SELECT');
-	var selCount = selElems.length;
-	for (var i = 0; i < selCount; i++)
-	{
-		var sel = selElems[i];
-		var name = sel.name;
-		if (name != null)
-		{
-			if (sel.name.lastIndexOf("_Subreport") > 1)
-			{
-				sel.selectedIndex = 0;
-			}
-			else if (sel.name.lastIndexOf("_DrillDownStyle") > 1)
-			{
-				sel.selectedIndex = 0;
-				sel.disabled = true;
-			}
-			else if (sel.name.lastIndexOf("_Extra") > 1)
-			{
-				sel.selectedIndex = 0;
-			}
-			else if (sel.name.lastIndexOf("_ExpressionType") > 1) {
-				sel.selectedIndex = 0;
-			}
-			else if (sel.name.lastIndexOf("_ConditionOperator") > 1) {
-				sel.selectedIndex = 0;
-			}
-			else
-				EBC_SetSelectContent(sel, '<option value=\'...\'>Loading ...</option>');
+	var elems = row.getElementsByTagName('SELECT');
+	var prefix = row.id != null && row.id.indexOf('_ExtraColumn') > 1 ? 'exv' : '';
+	for (var i = 0; i < elems.length; i++) {
+		var el = elems[i];
+		if (el.name == null) {
+			EBC_SetSelectContent(el, '<option value=\'...\'>Loading ...</option>');
+			break;
 		}
-		else
-		{
-			EBC_SetSelectContent(sel, '<option value=\'...\'>Loading ...</option>');
+
+		if (el.name.lastIndexOf('_' + prefix + 'Subreport') > 1) {
+			el.selectedIndex = 0;
 		}
+		else if (el.name.lastIndexOf('_' + prefix + 'DrillDownStyle') > 1) {
+			el.selectedIndex = 0;
+			el.disabled = true;
+		}
+		else if (el.name.lastIndexOf('_Extra') > 1) {
+			el.selectedIndex = 0;
+		}
+		else if (el.name.lastIndexOf('_' + prefix + 'ExpressionType') > 1) {
+			el.selectedIndex = 0;
+		}
+		else if (el.name.lastIndexOf('_' + prefix + 'ConditionOperator') > 1) {
+			el.selectedIndex = 0;
+		}
+		else {
+			EBC_SetSelectContent(el, '<option value=\'...\'>Loading ...</option>');
+		}
+	}
+
+	elems = row.getElementsByTagName('INPUT');
+	for (i = 0; i < elems.length; i++) {
+		var el = elems[i];
+		if (el.name == null)
+			break;
+
+		if (el.name.lastIndexOf('_ExtraDescription') > 1)
+			el.value = '';
 	}
 }
 
@@ -756,58 +805,52 @@ function EBC_ExpandSubTable(row)
 	}
 }
 
-function EBC_ExpandGroupTable(row)
-{
+function EBC_ExpandGroupTable(row) {
 	var rowIndex = row.rowIndex;
 	var table = row.parentNode;
-	var visible = "none";
-	for(var i = rowIndex + 1; i < table.rows.length; i++)
-	{
+
+	var className = row.className;
+	var collapsePattern = "Collapsed";
+	var collapsed = className.indexOf(collapsePattern) == (className.length - collapsePattern.length);
+	row.className = collapsed ? "VisualGroupMulti" : "VisualGroupMultiCollapsed";
+
+	for (var i = rowIndex + 1; i < table.rows.length; i++) {
 		var currentRow = table.rows[i];
 		if (currentRow.getAttribute("header") == "true"
-		    && (currentRow.getAttribute("level") <= row.getAttribute("level")))
-		    break;
-			
-		var display = currentRow.style["display"];
-		
-		if (i == rowIndex + 1)
-		    visible = display;
-		else
-		    display = visible;
-		
-		if(display == "none")
-		{
-			 display = "";
-			 currentRow.style["visibility"] = "visible";
-		}
-		else
-		{
-			display = "none";
+			&& (currentRow.getAttribute("level") <= row.getAttribute("level")))
+			break;
+
+		if (collapsed) {
+			var isFiltered = currentRow.className.indexOf("Filtered") >= 0;
+			if (!isFiltered) {
+				currentRow.style["display"] = "";
+				currentRow.style["visibility"] = "visible";
+			}
+		} else {
+			currentRow.style["display"] = "none";
 			currentRow.style["visibility"] = "hidden";
 		}
-		currentRow.style["display"] = display;
 	}
 }
 
 
-function EBC_ExpandTable(row)
-{
+function EBC_ExpandTable(row) {
 	var rowIndex = row.rowIndex;
 	var table = row.parentNode;
-	for(var i = rowIndex + 1; i < table.rows.length; i++)
-	{
+	if (table.rows[rowIndex].className == "VisualGroup")
+		table.rows[rowIndex].className = "VisualGroupCollapsed";
+	else
+		table.rows[rowIndex].className = "VisualGroup";
+	for (var i = rowIndex + 1; i < table.rows.length; i++) {
 		var currentRow = table.rows[i];
 		if (currentRow.getAttribute("header") == "true")
-		    break;
-			
+			break;
 		var display = currentRow.style["display"];
-		if(display == "none")
-		{
-			 display = "";
-			 currentRow.style["visibility"] = "visible";
+		if (display == "none") {
+			display = "";
+			currentRow.style["visibility"] = "visible";
 		}
-		else
-		{
+		else {
 			display = "none";
 			currentRow.style["visibility"] = "hidden";
 		}

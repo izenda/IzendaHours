@@ -29,6 +29,7 @@
             AdHocSettings.InstantReport = "InstantReport";
             AdHocSettings.ReportDesignerUrl = "ReportDesigner";
             AdHocSettings.DashboardDesignerUrl = "Dash";
+            AdHocSettings.InstantReport = "InstantReportNew";
             AdHocSettings.ReportList = "ReportList";
             AdHocSettings.SettingsPageUrl = "Settings";
             AdHocSettings.ParentSettingsUrl = "Settings";

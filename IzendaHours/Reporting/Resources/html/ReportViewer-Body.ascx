@@ -1,5 +1,4 @@
 ﻿<%@ Control AutoEventWireup="true" Language="C#" %>
-<%@ Import Namespace="Izenda.AdHoc" %>
 
 <iframe style="display: none" name="reportFrame" id='reportFrame' width='0' height='0'></iframe>
 <div id="loadingrv2" style="z-index: 500; top: 0px; left: 0px; width: 100%; background-color: #FFFFFF; position: fixed; display: none; text-align: center; vertical-align: middle;" lang-text="js_Loading">
@@ -37,20 +36,6 @@
             </div>
                 <div class="f-button">
                 <a class="gray" onclick="javascript:CancelAddCategory();" href="javascript:void(0);" style="width: 120px;"><span class="text" lang-text="js_Cancel">Cancel</span></a>
-                </div>
-    </div>
-    </div>
-</div>
-
-<div id="popupEsDialog" style="z-index: 515; top: 0px; left: 0px; width: 100%; position: absolute; display: none; text-align: center; vertical-align: middle;">
-    <div style="padding: 20px; background-color: #FFFFFF; border-style: solid; border-width: 1px; display: table; margin: 0 auto; width: 500px;">
-    <div id="epdContent"></div>
-        <div style="margin-top: 5px;">
-            <div class="f-button" style="margin-bottom: 4px;">
-                <a class="blue" onclick="javascript:HidePopupDialog(true);" href="javascript:void(0);" style="width: 50px;"><span class="text" lang-text="js_Ok">OK</span></a>
-            </div>
-                <div class="f-button">
-                <a class="gray" onclick="javascript:HidePopupDialog(false);" href="javascript:void(0);" style="width: 120px;"><span class="text" lang-text="js_Cancel">Cancel</span></a>
                 </div>
     </div>
     </div>
@@ -274,17 +259,18 @@
             </table>
         </div>
         <!-- Filters Templates -->
-                <div style="display: none;">
+        <div style="display: none;">
             <!-- Single Filter Template -->
-                    <div class="filterViewerTemplate" style="float: left; margin-right: 8px; margin-bottom: 16px; min-width: 300px; width: auto; display: none;">
-                        <div class="filterInnerContent" style="float: left; margin-right: 8px; min-width: 300px;">
-                            <div class="filterHeader" style="background-color: #1C4E89; padding: 2px; padding-left: 4px; margin-bottom: 2px; height: 23px; color: white;">
-                        <nobr class="filterTitleContainer" onmouseover="javascript:this.parentElement.onmouseover();var e=event?event:window.event;if(e){e.cancelBubble = true;if(e.stopPropagation){e.stopPropagation();}}">
-                            <div class="filterTitle" onmouseover="javascript:this.parentElement.onmouseover();this.style.opacity=1;var e=event?event:window.event;if(e){e.cancelBubble = true;if(e.stopPropagation){e.stopPropagation();}}" style="float: left; margin-right: 8px; width: 222px;"></div>
-                        </nobr>
-                        <div class="filterRemoveButton" style="float: right; width: 32px; height: 24px; cursor: pointer; opacity: 0.5; background-image: none; background-position: 8px 4px; background-repeat: no-repeat;" data-img="rs.aspx?image=ModernImages.clear-light-bigger.png" onmouseover="javascript:this.parentElement.onmouseover();this.style.opacity=1;var e=event?event:window.event;if(e){e.cancelBubble = true;if(e.stopPropagation){e.stopPropagation();}}" onmouseout="javascript:this.style.opacity=0.5;"></div>
-                                <div class="filterPropertiesButton" style="float: right; width: 32px; height: 24px; cursor: pointer; background-position: 8px 4px; background-repeat: no-repeat;" data-img="rs.aspx?image=ModernImages.gear-light.png" onmouseover="javascript:this.parentElement.onmouseover();this.style.opacity=1;var e=event?event:window.event;if(e){e.cancelBubble = true;if(e.stopPropagation){e.stopPropagation();}}" onmouseout="javascript:this.style.opacity=0.5;"></div>
-                    </div>
+            <div class="filterViewerTemplate" style="float: left; margin-right: 8px; margin-bottom: 16px; min-width: 300px; width: auto; display: none;">
+                <div class="filterInnerContent" style="float: left; margin-right: 8px; min-width: 300px;">
+                        <div class="filterHeader" style="background-color: #1C4E89; padding: 2px; padding-left: 4px; margin-bottom: 2px; height: 23px; color: white;">
+                            <span class="filterRequiredFlag" style="float: left; font-size: x-large; margin: 0px 3px; cursor: default; height: 23px; display:none;" title="Required">*</span>
+                            <nobr class="filterTitleContainer" onmouseover="javascript:this.parentElement.onmouseover();var e=event?event:window.event;if(e){e.cancelBubble = true;if(e.stopPropagation){e.stopPropagation();}}">
+                                <div class="filterTitle" onmouseover="javascript:this.parentElement.onmouseover();this.style.opacity=1;var e=event?event:window.event;if(e){e.cancelBubble = true;if(e.stopPropagation){e.stopPropagation();}}" style="float: left; margin-right: 8px; width: 222px; overflow: hidden; text-overflow: ellipsis;"></div>
+                            </nobr>
+                            <div class="filterRemoveButton" style="float: right; width: 32px; height: 24px; cursor: pointer; opacity: 0.5; background-image: none; background-position: 8px 4px; background-repeat: no-repeat;" data-img="rs.aspx?image=ModernImages.clear-light-bigger.png" onmouseover="javascript:this.parentElement.onmouseover();this.style.opacity=1;var e=event?event:window.event;if(e){e.cancelBubble = true;if(e.stopPropagation){e.stopPropagation();}}" onmouseout="javascript:this.style.opacity=0.5;"></div>
+                            <div class="filterPropertiesButton" style="float: right; width: 32px; height: 24px; cursor: pointer; background-position: 8px 4px; background-repeat: no-repeat;" data-img="rs.aspx?image=ModernImages.gear-light.png" onmouseover="javascript:this.parentElement.onmouseover();this.style.opacity=1;var e=event?event:window.event;if(e){e.cancelBubble = true;if(e.stopPropagation){e.stopPropagation();}}" onmouseout="javascript:this.style.opacity=0.5;"></div>
+                        </div>
                 </div>
             </div>
             <!-- Add New Filter Template -->
@@ -312,31 +298,29 @@
 		            <div>
                                 <div style="float: left; width: 100%; max-width: 400px; margin-right: 50px;">
 				            <table cellpadding="0" cellspacing="0" style="width: 100%;">
-                                        <tr>
+                                        <tr class="field-prop-row filter-prop-row">
                                             <td style="padding-top: 10px;" lang-text="js_Description">Description</td>
                                         </tr>
-                                        <tr>
-                                            <td>
-                                                <input id="propDescription" type="text" value="" style="width: 100%; margin: 0px;" /></td>
+                                        <tr class="field-prop-row filter-prop-row">
+                                            <td><input id="propDescription" type="text" value="" style="width: 100%; margin: 0px;" /></td>
                                         </tr>
-                                        <tr>
+                                        <tr class="field-prop-row">
                                             <td style="padding-top: 10px;" lang-text="js_Format">Format</td>
                                         </tr>
-                                        <tr>
-                                            <td>
-                                                <select id="propFormats" style="margin: 0px; width: 100%;"></select></td>
+                                        <tr class="field-prop-row">
+                                            <td><select id="propFormats" style="margin: 0px; width: 100%;"></select></td>
                                         </tr>
-                                        <tr>
+                                        <tr class="filter-prop-row">
                                             <td style="padding-top: 10px;" lang-text="js_FilterOperator">Filter Operator<span id="dupFilterNote" title="Several filters applied to this Field. Use Filters tab to modify specific filter." style="cursor: help; display: none;"> of 1st Filter ( ? )</span></td>
                                         </tr>
-                                        <tr>
-                                            <td>
-                                                <select id="propFilterOperators" style="margin: 0px; width: 100%;"></select></td>
+                                        <tr class="filter-prop-row">
+                                            <td><select id="propFilterOperators" style="margin: 0px; width: 100%;"></select></td>
                                         </tr>
 				            </table>
                             <input type="hidden" id="propFilterGUID" value="" />
+                                  <input type="hidden" id="propDialogMode" value="" />
 			            </div>
-                                <div style="float: left; margin-top: 10px;">
+                                <div style="float: left; margin-top: 10px;" id="fieldPropDiv">
 				            <table>
 					            <tr>
 						            <td>
@@ -386,7 +370,7 @@
             <div>
                         <div id="remainingFieldsSel" class="field-selector-container" style="display: inline-block; float: inherit;"></div>
 
-                        <div style="display: inline-block; width: 60px; text-align: center; float: inherit; vertical-align: top;">
+                        <div style="display: inline-block; width: 45px; padding: 0 9px; text-align: center; float: inherit; vertical-align: top;">
                     <div class="f-button middle">
                                 <a class="gray" onclick="javascript:AddRemainingFields();" href="javascript:void(0);">
                                     <img src="rs.aspx?image=ModernImages.right-add-white.png" alt="Right" /><span class="text" lang-text="js_Add">Add</span></a>

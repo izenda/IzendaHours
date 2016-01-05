@@ -27,9 +27,15 @@ function AjaxRequest(url, parameters, callbackSuccess, callbackError, id, dataTo
 	thisRequestObject.requestId = id;
 	thisRequestObject.dtk = dataToKeep;
 	thisRequestObject.onreadystatechange = ProcessRequest;
-
-	/*thisRequestObject.open('GET', url + '?' + parameters, true);
-	thisRequestObject.send();*/
+	if (typeof (window.izendaPageId$) !== 'undefined') {
+		if (url.indexOf("?") == -1)
+			url = url + "?";
+		else {
+			if (url[url.length - 1] != '&' && url[url.length - 1] != '?')
+				url = url + "&";
+		}
+		url = url + 'izpid=' + window.izendaPageId$;
+	}
 	thisRequestObject.open('POST', url, true);
 	thisRequestObject.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 	thisRequestObject.send(parameters);
@@ -150,44 +156,36 @@ function ReversedReportSet(returnObj, id) {
 function initDataSources(url) {
 	databaseSchema = jq$.getValues(url);
 	if (databaseSchema != null) {
-		databaseSchema.sort(function (a, b) {
-			if (a.DataSourceCategory < b.DataSourceCategory)
-				return -1;
-			if (a.DataSourceCategory > b.DataSourceCategory)
-				return 1;
-			return 0;
-		});
 		var datasourcesSearch = new IzendaDatasourcesSearch(databaseSchema);
 		jq$(".database").remove();
 		tInd = 0;
 		var html = "";
-		for (var i = 0; i < databaseSchema.length; i++)
+		for (var i = 0; i < databaseSchema.length; i++) {
 			html += renderDatabase(databaseSchema[i], i);
-		jq$(html).prependTo("#databases");
-	  NDS_Init();
-	  if (databaseSchema.length == 1) {
-		  setTimeout(function() {
-		  	var dbh = document.getElementById('rdbh0');
-		  	if (typeof dbh != 'undefined' && dbh != null) {
-		  		dbh = jq$(dbh);
-		  		initializeTables(dbh);
-		  		dbh.toggleClass("opened", animationTime);
-		  		setTimeout(DsDomChanged, animationTime + 100);
-		  	}
-		  }, 100);
 		}
-//		ExistingReportSetInit();
-		/*var databases = $(".database");
-		if (databases && databases.length == 1)
-			$(databases[0]).addClass("opened");
-		initDraggable();
-		var datasourcesSearch = new IzendaDatasourcesSearch(databaseSchema);*/
+		jq$(html).prependTo("#databases");
+		NDS_Init();
+
+		setTimeout(function () {
+			var length = databaseSchema.length;
+			for (var i = 0; i < length; i++) {
+				var dbh = document.getElementById('rdbh' + i);
+				if (typeof dbh != 'undefined' && dbh != null) {
+					dbh = jq$(dbh);
+					initializeTables(dbh);
+					if (length == 1) {
+						dbh.toggleClass("opened", animationTime);
+						setTimeout(DsDomChanged, animationTime + 100);
+					}
+				}
+			}
+		}, 100);
 	};
 }
 
 function renderDatabase(database, key) {
 	database.domIdHeader = 'rdbh' + key;
-    var element = " \
+	var element = " \
 	<div class='database' id='rdbh" + key + "'> \
 		<div class='database-header'> \
 			<a href='#" + database.DataSourceCategory + "'> \
@@ -198,30 +196,112 @@ function renderDatabase(database, key) {
  \
 		<div class='database-tables' id='rdb" + key + "'>" + IzLocal.Res("js_Loading", "Loading...") + "</div> \
 	</div> \ ";
-    return element;
+	return element;
+}
+
+function clearView(table) {
+	table.each(function () {
+		var arrayClasses = jq$(this).attr("class").split(" ");
+		for (var i = 0; i < arrayClasses.length; i++) {
+			if (arrayClasses[i].indexOf('-view') != -1) jq$(this).removeClass(arrayClasses[i]);
+		}
+	});
+}
+
+function selectTrigger(trigger) {
+	trigger.parent().children().removeClass("selected");
+	trigger.addClass("selected");
+}
+
+function setView(table, view) {
+	clearView(table);
+	table.addClass(view);
+	table.attr('data-view', view);
+	var trigger = table.find("span[data-view=" + view + "]");
+	selectTrigger(trigger);
+}
+
+function initializeTables(database$) {
+	if (database$.length > 0) {
+		var hId = database$[0].id;
+		hId = hId.substr(4);
+		var contentDiv = document.getElementById('rdb' + hId);
+		var currHtml = contentDiv.innerHTML;
+		if (currHtml != IzLocal.Res("js_Loading", "Loading..."))
+			return;
+		var html = renderTables(databaseSchema[hId].tables, hId);
+		contentDiv.innerHTML = html;
+
+		//begin some app
+		initDraggable();
+		jq$(".database-header a, .table-header a, a.field, .table-header a .checkbox-container, a.uncheck, a.collapse").click(function (event) {
+			event.preventDefault();
+		});
+		var triggersHtml = "<span class='f-trigger' data-view='fields-view'> \
+								<img src='rs.aspx?image=ModernImages.fields-icon.png' alt='' /> <span class='text'>" + IzLocal.Res("js_Fields", "Fields") + "</span> \
+							</span> \
+							<span class='p-trigger' data-view='preview-view'>" + IzLocal.Res("js_Preview", "Preview") + "</span> \
+							<span class='v-trigger' data-view='visuals-view'>" + IzLocal.Res("js_Visuals", "Visuals") + "</span> \
+							<span class='b-trigger' data-view='relationships-view'>" + IzLocal.Res("js_Relationships", "Relationships") + "</span> \ ";
+
+		jq$(".table-view-triggers").filter(function (index) {
+			var shouldBeReturned = false;
+			var npAttr;
+			try {
+				npAttr = this.getAttribute('notProcessed1');
+			}
+			catch (e) {
+				npAttr = '0';
+			}
+			if (npAttr == '1') {
+				shouldBeReturned = true;
+				this.setAttribute('notProcessed1', '0');
+			}
+			return shouldBeReturned;
+		}).append(triggersHtml);
+
+		jq$(".table").each(function () {
+			setView(jq$(this), "fields-view");
+		});
+
+		jq$(".field-popup-trigger").mouseup(function (event) {
+			event.cancelBubble = true;
+			(event.stopPropagation) ? event.stopPropagation() : event.returnValue = false;
+			(event.preventDefault) ? event.preventDefault() : event.returnValue = false;
+			var parent = this.parentElement;
+			var fieldSqlName = parent.getAttribute('fieldid');
+			if (fieldSqlName != null && fieldSqlName != '') {
+				ShowFieldProperties(fieldSqlName, parent.children[2].innerHTML, parent.getAttribute('id'));
+			}
+			return false;
+		});
+	}
 }
 
 function renderTables(tables, dbKey) {
-	var html = "";
-	for (key in tables) {
-	  html += renderTable(dbKey, tables[key], key, tables[key].sysname, tInd);
+	var html = "",
+		length = tables.length;
+	for (var i = 0; i < length; ++i) {
+		var table = tables[i];
+		html += renderTable(dbKey, table, table.name, table.sysname, tInd);
 		tInd++;
 	}
 	return html;
 }
 
-function renderTable(dbKey, table, key, tableId, ind) {
+function renderTable(dbKey, table, name, tableId, ind) {
 	table.domId = 'tcb' + ind;
+	var tableIdPart = tableId.replace(/[\]\[\.]/g, "");
 	var element = " \
 			<div class='table'> \
 				<div class='table-header'> \
-					<a href='#" + key + "' tableInd='" + ind + "' id='rdbh" + dbKey + "_" + key + "'> \
+					<a href='#" + name + "' tableInd='" + ind + "' id='rdbh" + dbKey + "_" + tableIdPart + "'> \
 						<span class='checkbox-container' locked='false' sorder='-1' id='tcb" + ind + "' tableid='" + tableId + "' onclick='DsClicked(" + ind + ")'><span class='checkbox'></span></span> \
-						<span class='table-name'>" + key + "</span> \
+						<span class='table-name'>" + name + "</span> \
 						<div class='clearfix'></div> \
 					</a> \
 				</div> \
-				<div class='table-fields' id='rdb" + dbKey + "_" + key + "'>" + IzLocal.Res("js_Loading", "Loading...") + "</div> \
+				<div class='table-fields' id='rdb" + dbKey + "_" + tableIdPart + "'>" + IzLocal.Res("js_Loading", "Loading...") + "</div> \
 			</div> \ ";
 	return element;
 }
@@ -416,6 +496,16 @@ function ReportViewed(returnObj, id) {
 		alert("Error: " + returnObj.Value);
 }
 
+function DS_ShowFilterProperties(fieldSqlName, friendlyName, fiIds, filterGUID) {
+	curPropField = fieldSqlName;
+	var filter = DS_GetFullField(fieldSqlName, friendlyName);
+	if (filterGUID != null)
+		filter.FilterGUID = filterGUID;
+	var requestString = 'wscmd=fieldoperatorsandformatswithdefault';
+	requestString += '&wsarg0=' + curPropField;
+	AjaxRequest('./rs.aspx', requestString, FilterPropFormatsGot, null, 'fieldoperatorsandformatswithdefault', filter);
+}
+
 function DS_ShowFieldProperties(fieldSqlName, friendlyName, fiIds, filterGUID) {
 	curFieldIndexes = fiIds;
 	var autoTotal = false;
@@ -439,9 +529,6 @@ function DS_ShowFieldProperties(fieldSqlName, friendlyName, fiIds, filterGUID) {
 	field.Selected = selected;
 	if (field.Total == null)
 		field.Total = 1;
-	if (filterGUID != null)
-		field.FilterGUID = filterGUID;
-
 	var requestString = 'wscmd=fieldoperatorsandformatswithdefault';
 	requestString += '&wsarg0=' + curPropField;
 	AjaxRequest('./rs.aspx', requestString, FieldPropFormatsGot, null, 'fieldoperatorsandformatswithdefault', field);
@@ -450,7 +537,7 @@ function DS_ShowFieldProperties(fieldSqlName, friendlyName, fiIds, filterGUID) {
 function DS_GetFullField(fieldSqlName, friendlyName) {
 	var field = new Object();
 	field.FriendlyName = friendlyName;
-	field.Description = friendlyName;
+	field.Description = EBC_Humanize("", friendlyName, "");
 	field.Total = 0;
 	field.VG = 0;
 	field.LabelJ = 1;
@@ -471,11 +558,47 @@ function DS_GetFullField(fieldSqlName, friendlyName) {
 	return field;
 }
 
-function FieldPropFormatsGot(returnObj, id, field) {
+function FilterPropFormatsGot(returnObj, id, field) {
   if (id != 'fieldoperatorsandformatswithdefault' || returnObj == undefined || returnObj == null)
   	return;
 	if (returnObj.Value != "Field not set" && returnObj.AdditionalData != null && returnObj.AdditionalData.length > 1) {
 		var operatorsData = returnObj.AdditionalData.slice(0, returnObj.Value);
+		field.FilterOperatorNames = new Array();
+		field.FilterOperatorValues = new Array();
+		fCnt = 0;
+		avCnt = 0;
+		while (avCnt < operatorsData.length) {
+			field.FilterOperatorNames[fCnt] = operatorsData[avCnt];
+			avCnt++;
+			field.FilterOperatorValues[fCnt] = operatorsData[avCnt];
+			avCnt++;
+			fCnt++;
+		}
+		field.FilterOperator = '...';
+		if (fieldsOpts[curPropField] != null)
+			field.FilterOperator = fieldsOpts[curPropField].FilterOperator;
+		if (field.FilterGUID == null) {
+			for (var find = 0; find < filtersData.length; find++)
+				if (filtersData[find].ColumnName == field.ColumnName) {
+					field.FilterGUID = filtersData[find].GUID;
+					break;
+				}
+		}
+		if (field.FilterGUID != null) {
+			for (var find = 0; find < filtersData.length; find++)
+				if (filtersData[find].GUID == field.FilterGUID) {
+					field.FilterOperator = filtersData[find].OperatorValue;
+					break;
+				}
+		}
+		FP_ShowFilterProperties(field, fieldPopup);
+	}
+}
+
+function FieldPropFormatsGot(returnObj, id, field) {
+  if (id != 'fieldoperatorsandformatswithdefault' || returnObj == undefined || returnObj == null)
+  	return;
+	if (returnObj.Value != "Field not set" && returnObj.AdditionalData != null && returnObj.AdditionalData.length > 1) {
 		var formatsData = returnObj.AdditionalData.slice(returnObj.Value);
 		field.Format = '...';
 		if (fieldsOpts[curPropField] != null)
@@ -493,37 +616,6 @@ function FieldPropFormatsGot(returnObj, id, field) {
 			avCnt++;
 			fCnt++;
 		}
-		field.FilterOperatorNames = new Array();
-		field.FilterOperatorValues = new Array();	
-		fCnt = 0;
-		avCnt = 0;
-		while (avCnt < operatorsData.length) {
-			field.FilterOperatorNames[fCnt] = operatorsData[avCnt];
-			avCnt++;
-			field.FilterOperatorValues[fCnt] = operatorsData[avCnt];
-			avCnt++;
-			fCnt++;
-		}
-		field.FilterOperator = '...';
-		if (fieldsOpts[curPropField] != null)
-			field.FilterOperator = fieldsOpts[curPropField].FilterOperator;
-
-		if (field.FilterGUID == null) {
-			for (var find = 0; find < filtersData.length; find++)
-				if (filtersData[find].ColumnName == field.ColumnName) {
-					field.FilterGUID = filtersData[find].GUID;
-					break;
-				}
-		}
-
-		if (field.FilterGUID != null) {
-			for (var find = 0; find < filtersData.length; find++)
-				if (filtersData[find].GUID == field.FilterGUID) {
-					field.FilterOperator = filtersData[find].OperatorValue;
-					break;
-				}
-		}
-
 		FP_ShowFieldProperties(field, fieldPopup);
 		PreviewFieldDelayed(500);
 	}
@@ -535,13 +627,11 @@ function StoreFieldProps(newField) {
 	opts.TotalChecked = newField.Total;
 	opts.VgChecked = newField.VG;
 	opts.Format = newField.Format;
-	opts.FilterOperator = newField.FilterOperator;
 	opts.LabelJVal = newField.LabelJ;
 	opts.ValueJVal = newField.ValueJ;
 	opts.Width = newField.Width;
 	opts.IsMultilineHeader = newField.IsMultilineHeader;
 	fieldsOpts[curPropField] = opts;
-
 	if (curFieldIndexes != null && curFieldIndexes != ''){
 		var s = curFieldIndexes.split('fcb');
 		if (s.length == 2 && s[0].length >= 4) {
@@ -549,29 +639,6 @@ function StoreFieldProps(newField) {
 			var fcbInd = s[1];
 			FiClick(tcbInd, fcbInd, true, true);
 		}
-	}
-
-	if (newField.FilterGUID != null && newField.FilterGUID != 'undefined') {
-		for (var i = 0; i < filtersData.length; i++)
-			if (filtersData[i].GUID == newField.FilterGUID) {
-				filtersData[i].OperatorValue = newField.FilterOperator;
-				CommitFiltersData(false);
-				break;
-			}
-	} else {
-		var filterObj = new Object();
-		filterObj.Removed = false;
-		filterObj.Uid = '';
-		filterObj.GUID = '';
-		filterObj.Value = null;
-		filterObj.Values = null;
-		filterObj.Type = 1;
-		filterObj.ColumnName = curPropField;
-		filterObj.OperatorValue = newField.FilterOperator;
-		filterObj.AliasTable = jq$('#newFilterFieldDropDown').find('option[value="' + curPropField + '"]').data('alias');
-
-		filtersData.push(filterObj);
-		CommitFiltersData(false);
 	}
 }
 
@@ -596,15 +663,14 @@ function PreviewFieldToDiv() {
 
 function PreviewField(field, container) {
 	var requestString = 'wscmd=getfieldpreview';
-	var fProps = FP_CollectProperties();
+	var fProps = FP_CollectFieldProperties();
 	var description = fProps.Description;
 	var totalChecked = fProps.Total;
 	var vgChecked = fProps.VG;
 	var format = fProps.Format;
-	var filterOperator = fProps.FilterOperator;
 	var labelJVal = fProps.LabelJ;
 	var valueJVal = fProps.ValueJ;
-	var fieldOpts = ',\'Desc\':\'' + description + '\',\'Total\':\'' + totalChecked + '\',\'Vg\':\'' + vgChecked + '\',\'LabelJ\':\'' + labelJVal + '\',\'ValueJ\':\'' + valueJVal + '\',\'Format\':\'' + format + '\',\'FilterOperator\':\'' + filterOperator + '\'';
+	var fieldOpts = ',\'Desc\':\'' + description + '\',\'Total\':\'' + totalChecked + '\',\'Vg\':\'' + vgChecked + '\',\'LabelJ\':\'' + labelJVal + '\',\'ValueJ\':\'' + valueJVal + '\',\'Format\':\'' + format + '\'';
 	requestString += "&wsarg0=" + encodeURIComponent("{'Na':'" + field + "','Cnt':'10'" + fieldOpts + "}");
 
 	var thisRequestObject;
@@ -1267,64 +1333,77 @@ function NDS_RestoreDsSelection(tind) {
 }
 
 function initFieldsDsp(nwid) {
-  var hId = nwid.id;
-  hId = hId.substr(4);
-  var contentDiv = document.getElementById('rdb' + hId);
-  var currHtml = contentDiv.innerHTML;
-  if (currHtml != IzLocal.Res("js_Loading", "Loading..."))
-    return;
-  var firstUnder = hId.indexOf('_');
-  var dbKey = hId.substr(0, firstUnder);
-  var tKey = hId.substr(firstUnder + 1);
+	var hId = nwid.id;
+	hId = hId.substr(4);
+	var contentDiv = document.getElementById('rdb' + hId);
+	var currHtml = contentDiv.innerHTML;
+	if (currHtml != IzLocal.Res("js_Loading", "Loading...")) {
+		return;
+	}
+	var firstUnder = hId.indexOf('_');
+	var dbKey = hId.substr(0, firstUnder);
+	var tKey = hId.substr(firstUnder + 1);
 
-  var willBeTableIndex = jq$(nwid).attr('tableInd');
-  fieldsIndex = 0;
-  var html = renderSections(willBeTableIndex, databaseSchema[dbKey].tables[tKey].fields);
-  html = '<div class=\'table-fields-sections-background\'></div>' + html;
-  contentDiv.innerHTML = html;
+	var willBeTableIndex = jq$(nwid).attr('tableInd');
+	fieldsIndex = 0;
+	var getFieldsByTableKey = function(key) {
+		var tables = databaseSchema[dbKey].tables,
+		length = tables.length,
+		result = {};
+		for (var i = 0; i < length; ++i) {
+			var table = tables[i];
+			if (table.sysname.replace(/[\]\[\.]/g, "") == key) {
+				result = table.fields;
+				break;
+			}
+		}
+		return result;
+	};
+	var html = renderSections(willBeTableIndex, getFieldsByTableKey(tKey));
+	html = '<div class=\'table-fields-sections-background\'></div>' + html;
+	contentDiv.innerHTML = html;
 
-  initDraggable();
-  jq$(".database-header a, .table-header a, a.field, .table-header a .checkbox-container, a.uncheck, a.collapse").click(function (event) {
-    event.preventDefault();
-  });
-  var triggersHtml = "<span class='f-trigger' data-view='fields-view'> \
+	initDraggable();
+	jq$(".database-header a, .table-header a, a.field, .table-header a .checkbox-container, a.uncheck, a.collapse").click(function (event) {
+		event.preventDefault();
+	});
+	var triggersHtml = "<span class='f-trigger' data-view='fields-view'> \
 							<img src='rs.aspx?image=ModernImages.fields-icon.png' alt='' /> <span class='text'>" + IzLocal.Res("js_Fields", "Fields") + "</span> \
 						</span> \
 						<span class='p-trigger' data-view='preview-view'>" + IzLocal.Res("js_Preview", "Preview") + "</span> \
 						<span class='v-trigger' data-view='visuals-view'>" + IzLocal.Res("js_Visuals", "Visuals") + "</span> \
 						<span class='b-trigger' data-view='relationships-view'>" + IzLocal.Res("js_Relationships", "Relationships") + "</span> \ ";
 	jq$(".table-view-triggers").filter(function (index) {
-    var shouldBeReturned = false;
-    var npAttr;
-    try {
-      npAttr = this.getAttribute('notProcessed1');
-    }
-    catch (e) {
-      npAttr = '0';
-    }
-    if (npAttr == '1') {
-      shouldBeReturned = true;
-      this.setAttribute('notProcessed1', '0');
-    }
-    return shouldBeReturned;
-  }).append(triggersHtml);
+		var shouldBeReturned = false;
+		var npAttr;
+		try {
+			npAttr = this.getAttribute('notProcessed1');
+		} catch (e) {
+			npAttr = '0';
+		}
+		if (npAttr == '1') {
+			shouldBeReturned = true;
+			this.setAttribute('notProcessed1', '0');
+		}
+		return shouldBeReturned;
+	}).append(triggersHtml);
 
 	jq$(".table").each(function () {
 		setView(jq$(this), "fields-view");
-  });
+	});
 
 	jq$(".field-popup-trigger").mouseup(function (event) {
-      event.cancelBubble = true;
-      (event.stopPropagation) ? event.stopPropagation() : event.returnValue = false;
-      (event.preventDefault) ? event.preventDefault() : event.returnValue = false;
-    var parent = this.parentElement;
-    var fieldSqlName = parent.getAttribute('fieldid');
-    if (fieldSqlName != null && fieldSqlName != '') {
-    	var friendlyName = jq$(parent).find('.field-name').html();
-        DS_ShowFieldProperties(fieldSqlName, friendlyName, parent.getAttribute('id'));
-    }
-    return false;
-  });
+		event.cancelBubble = true;
+		(event.stopPropagation) ? event.stopPropagation() : event.returnValue = false;
+		(event.preventDefault) ? event.preventDefault() : event.returnValue = false;
+		var parent = this.parentElement;
+		var fieldSqlName = parent.getAttribute('fieldid');
+		if (fieldSqlName != null && fieldSqlName != '') {
+			var friendlyName = jq$(parent).find('.field-name').html();
+      DS_ShowFieldProperties(fieldSqlName, friendlyName, parent.getAttribute('id'));
+		}
+		return false;
+	});
 }
 
 function DsClicked(dsInd) {
@@ -1530,7 +1609,7 @@ function UpdateDataSources() {
 				continue;
 
 			var ds = {
-				FriendlyName: key,
+				FriendlyName: table.name,
 				DbName: table.sysname,
 				DataType: 0,
 				IsStoredProc: false,
@@ -1541,7 +1620,8 @@ function UpdateDataSources() {
 				var field = table.fields[fieldKey];
 				var column = {
 					FriendlyName: fieldKey,
-					DbName: field.sysname
+					DbName: field.sysname,
+					FilterFriendlyName: field.filterAlias
 				};
 				columns.push(column);
 			}
@@ -1582,10 +1662,8 @@ function ShowFieldPropertiesByFullFieldName(fieldName, GUID) {
 	for (var dsInd = 0; dsInd < dataSources.length; dsInd++)
 		for (var colInd = 0; colInd < dataSources[dsInd].Columns.length; colInd++)
 			if (dataSources[dsInd].Columns[colInd].DbName == fieldName) {
-				DS_ShowFieldProperties(fieldName, dataSources[dsInd].Columns[colInd].FriendlyName, null, GUID);
+				DS_ShowFilterProperties(fieldName, dataSources[dsInd].Columns[colInd].FriendlyName, null, GUID);
 				return;
 			}
-
-	DS_ShowFieldProperties(fieldName, fieldName, null, GUID);
 	return;
 }

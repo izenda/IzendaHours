@@ -62,10 +62,10 @@ is_ie9_or_newer = false;
                     <a id="appendChartBtn" href="#add_chart" title="Add Chart" onclick="javascript:AppendChart();">
                         <img style="margin-bottom: -9px;" src="rs.aspx?image=chartplusW.png" />
                     </a>
-                    <a class="button" href="#design_report" title="Design Report" onclick="DesignReportRequest(CollectReportData());" lang-text="js_DesignReport">
+                    <a class="button" href="#design_report" title="Design Report" onclick="DesignReportRequest(CollectReportData());">
                         <img style="margin-bottom: -9px;" src="rs.aspx?image=ModernImages.pencilwhite.png" />
                     </a>
-                    <a class="button default" href="#view_report" title="View Report" onclick="ViewReportRequest(CollectReportData());" lang-text="js_ViewReport">
+                    <a class="button default" href="#view_report" title="View Report" onclick="ViewReportRequest(CollectReportData());">
                         <img style="margin-bottom: -9px;" src="rs.aspx?image=ModernImages.magwhite.png" />
                     </a>
                 </h2>
@@ -77,6 +77,7 @@ is_ie9_or_newer = false;
                         <div class="filterViewerTemplate" style="float: left; margin-right: 8px; margin-bottom: 16px; min-width: 300px; width: auto; display: none;">
                             <div class="filterInnerContent" style="float: left; margin-right: 8px; min-width: 300px;">
                                 <div class="filterHeader" style="background-color: #1C4E89; padding: 2px; padding-left: 4px; margin-bottom: 2px; height: 23px; color: white;">
+                                  <span style="float: left; font-size: x-large; margin: 0px 3px; cursor: default; height: 23px; display:none;">&nbsp;</span>
                                     <nobr class="filterTitleContainer" onmouseover="javascript:this.parentElement.onmouseover();var e=event?event:window.event;if(e){e.cancelBubble = true;if(e.stopPropagation){e.stopPropagation();}}">
                                     <div class="filterTitle" onmouseover="javascript:this.parentElement.onmouseover();this.style.opacity=1;var e=event?event:window.event;if(e){e.cancelBubble = true;if(e.stopPropagation){e.stopPropagation();}}" style="float: left; margin-right: 8px; width: 222px;"></div>
                                 </nobr>
@@ -106,31 +107,32 @@ is_ie9_or_newer = false;
                         <div id="titleDiv" style="margin: 0px; text-align: left; text-transform: capitalize; color: #fff; background-color: #1C4E89; padding: 6px; width: 100%; max-width: 388px;"></div>
                         <div style="float: left; width: 100%; max-width: 400px; margin-right: 50px;">
                             <table cellpadding="0" cellspacing="0" style="width: 100%;">
-                                <tr>
+                                <tr class="field-prop-row">
                                     <td style="padding-top: 10px;" lang-text="js_Description">Description</td>
                                 </tr>
-                                <tr>
+                                <tr class="field-prop-row">
                                     <td>
                                         <input id="propDescription" type="text" value="" style="width: 100%; margin: 0px;" onkeyup="PreviewFieldDelayed(1000);" /></td>
                                 </tr>
-                                <tr>
+                                <tr class="field-prop-row">
                                     <td style="padding-top: 10px;" lang-text="js_Format">Format</td>
                                 </tr>
-                                <tr>
+                                <tr class="field-prop-row">
                                     <td>
                                         <select id="propFormats" style="margin: 0px; width: 100%;" onchange="PreviewFieldDelayed(1000);"></select></td>
                                 </tr>
-                                <tr>
+                                <tr class="filter-prop-row">
                                     <td style="padding-top: 10px;" lang-text="js_FilterOperator">Filter Operator<span id="dupFilterNote" title="Several filters applied to this Field. Use Filters tab to modify specific filter." style="cursor: help; display: none;"> of 1st Filter ( ? )</span></td>
                                 </tr>
-                                <tr>
+                                <tr class="filter-prop-row">
                                     <td>
-                                        <select id="propFilterOperators" style="margin: 0px; width: 100%;" onchange="PreviewFieldDelayed(1000);"></select></td>
+                                        <select id="propFilterOperators" style="margin: 0px; width: 100%;"></select></td>
                                 </tr>
                             </table>
                             <input type="hidden" id="propFilterGUID" value="" />
+                          <input type="hidden" id="propDialogMode" value="" />
                         </div>
-                        <div style="float: left; margin-top: 10px; margin-right: 20px;">
+                        <div style="float: left; margin-top: 10px; margin-right: 20px;" id="fieldPropDiv">
                             <table>
                                 <tr>
                                     <td>
@@ -285,63 +287,6 @@ is_ie9_or_newer = false;
         }
     }
 
-    function initializeTables(database$) {
-        if (database$.length > 0) {
-            var hId = database$[0].id;
-            hId = hId.substr(4);
-            var contentDiv = document.getElementById('rdb' + hId);
-            var currHtml = contentDiv.innerHTML;
-            if (currHtml != IzLocal.Res("js_Loading", "Loading..."))
-                return;
-            var html = renderTables(databaseSchema[hId].tables, hId);
-            contentDiv.innerHTML = html;
-
-            //begin some app
-            initDraggable();
-            jq$(".database-header a, .table-header a, a.field, .table-header a .checkbox-container, a.uncheck, a.collapse").click(function (event) {
-                event.preventDefault();
-            });
-            var triggersHtml = "<span class='f-trigger' data-view='fields-view'> \
-              <img src='rs.aspx?image=ModernImages.fields-icon.png' alt='' /> <span class='text'>" + IzLocal.Res("js_Fields", "Fields") + "</span> \
-            </span> \
-            <span class='p-trigger' data-view='preview-view'>" + IzLocal.Res("js_Preview", "Preview") + "</span> \
-            <span class='v-trigger' data-view='visuals-view'>" + IzLocal.Res("js_Visuals", "Visuals") + "</span> \
-            <span class='b-trigger' data-view='relationships-view'>" + IzLocal.Res("js_Relationships", "Relationships") + "</span> \ ";
-            jq$(".table-view-triggers").filter(function (index) {
-                var shouldBeReturned = false;
-                var npAttr;
-                try {
-                    npAttr = this.getAttribute('notProcessed1');
-                }
-                catch (e) {
-                    npAttr = '0';
-                }
-                if (npAttr == '1') {
-                    shouldBeReturned = true;
-                    this.setAttribute('notProcessed1', '0');
-                }
-                return shouldBeReturned;
-            }).append(triggersHtml);
-
-            jq$(".table").each(function () {
-                setView(jq$(this), "fields-view");
-            });
-
-            jq$(".field-popup-trigger").mouseup(function (event) {
-                event.cancelBubble = true;
-                (event.stopPropagation) ? event.stopPropagation() : event.returnValue = false;
-                (event.preventDefault) ? event.preventDefault() : event.returnValue = false;
-                var parent = this.parentElement;
-                var fieldSqlName = parent.getAttribute('fieldid');
-                if (fieldSqlName != null && fieldSqlName != '') {
-                    ShowFieldProperties(fieldSqlName, parent.children[2].innerHTML, parent.getAttribute('id'));
-                }
-                var fieldName = jq$(this).parent().find(".field-name").text();
-                return false;
-            });
-        }
-    }
-
     jq$(document).ready(function () {
         FixLayoutForIE8();
         GetInstantReportConfig();
@@ -349,7 +294,6 @@ is_ie9_or_newer = false;
 
     jq$(".database-header a").live("click", function () {
         var dbh = jq$(this).parent().parent();
-        initializeTables(dbh);
         dbh.toggleClass("opened", animationTime);
         setTimeout(DsDomChanged, animationTime + 100);
     });
@@ -413,32 +357,6 @@ is_ie9_or_newer = false;
         });
     }
 
-    function clearView(table) {
-        table.each(function () {
-            var arrayClasses = jq$(this).attr("class").split(" ");
-            for (var i = 0; i < arrayClasses.length; i++) {
-                if (arrayClasses[i].indexOf('-view') != -1) jq$(this).removeClass(arrayClasses[i]);
-            }
-        });
-    }
-
-    function setView(table, view) {
-        clearView(table);
-        table.addClass(view);
-        table.attr('data-view', view);
-        var trigger = table.find("span[data-view=" + view + "]");
-        selectTrigger(trigger);
-    }
-
-    function selectTrigger(trigger) {
-        trigger.parent().children().removeClass("selected");
-        trigger.addClass("selected");
-    }
-
-    function restoreViews() {
-        jq$(".table.fields-view .table-view-triggers span[data-view='fields-view']").addClass("selected");
-    }
-
     function hideFieldsPreview() {
         var fields = jq$(".field");
         fields.removeClass("show-preview");
@@ -484,11 +402,18 @@ is_ie9_or_newer = false;
             height: "auto",
             modal: true,
             buttons: {
-                "OK": function () {
-                    StoreFieldProps(FP_CollectProperties());
-                    jq$(this).dialog("close");
+              "OK": function () {
+                    var propDialogMode = document.getElementById('propDialogMode');
+                    if (propDialogMode.value == 'filter') {
+                      var filter = FP_CollectFilterProperties();
+                      CommitChangedFilter(filter);
+                    }
+                    else if (propDialogMode.value == 'field') {
+                      StoreFieldProps(FP_CollectFieldProperties());
+                    }
                     if (updateOnAdvancedOk)
-                        PreviewReportManual();
+                      PreviewReportManual();
+                    jq$(this).dialog("close");
                 },
                 "Cancel": function () {
                     jq$(this).dialog("close");

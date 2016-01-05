@@ -11,8 +11,17 @@ function AjaxRequest(url, parameters, callbackSuccess, callbackError, id) {
 		thisRequestObject = new ActiveXObject("Microsoft.XMLHTTP");
 	thisRequestObject.requestId = id;
 	thisRequestObject.onreadystatechange = ProcessRequest;
-
-	thisRequestObject.open('GET', url + '?' + parameters, true);
+	url = url + '?' + parameters;
+	if (typeof (window.izendaPageId$) !== 'undefined') {
+		if (url.indexOf("?") == -1)
+			url = url + "?";
+		else {
+			if (url[url.length - 1] != '&' && url[url.length - 1] != '?')
+				url = url + "&";
+		}
+		url = url + 'izpid=' + window.izendaPageId$;
+	}
+	thisRequestObject.open('GET', url, true);
 	thisRequestObject.send();
 
 	function DeserializeJson() {
@@ -216,6 +225,8 @@ function AcceptReports(returnObj, id, parameters) {
 	var leftContent = '';
 	var tabs = new Array();
 	var catsWithSubcats = [];
+	var lastlySelectedCatName = tabNames[lastlySelectedCat];
+	var previousCatFound = false;
 	if (returnObj.ReportSets.length == 0 && (parameters.toString().match(/wsarg1=./) == null || parameters.toString().match(/wsarg1=./) == 'wsarg1=&')) {
 		jq$("#loadingDiv").css("display", "none");
 		jq$("#addInstantReportContainerDiv").css("display", "");
@@ -248,8 +259,16 @@ function AcceptReports(returnObj, id, parameters) {
 						if (catsWithSubcats[categoriesAll[i]] == null)
 							catsWithSubcats[categoriesAll[i]] = i;
 				}
+
+				if (tabs[tabIndex].CategoryFull == lastlySelectedCatName && tabIndex == lastlySelectedCat)
+					previousCatFound = true;
 			}
 			tabs[tabIndex].Reports[tabs[tabIndex].Reports.length] = returnObj.ReportSets[rCnt1];
+		}
+		if (!previousCatFound && lastlySelectedCatName != null && tabs.length > 0) {
+			lastlySelectedCat = 0;
+			GetReports(searchKeyword, tabs[0].CategoryFull);
+			return;
 		}
 		if (tabs.length <= 0) {
 			jq$("#RL_SearchingIcon").css("display", "none");
@@ -335,30 +354,39 @@ function AcceptReports(returnObj, id, parameters) {
 			report = tabs[tabCnt].Reports[rCnt];
 			if (report.Dashboard && forSelection)
 				continue;
+			if (report.Dashboard)
+				designTemplate = nrlConfigObj.DashboardDesignTemplate;
+			else if (report.ReportDesignerType === 'ReportDesigner') {
+				designTemplate = nrlConfigObj.ReportDesignTemplate;
+			} else {
+				designTemplate = nrlConfigObj.InstantReportDesignTemplate;
+			}
 
-			designTemplate = report.Dashboard ? nrlConfigObj.DashboardDesignTemplate : nrlConfigObj.ReportDesignTemplate;
 			viewTemplate = report.Dashboard ? nrlConfigObj.DashboardViewTemplate : nrlConfigObj.ReportViewTemplate;
 			linkTemplate = report.Dashboard ? nrlConfigObj.DashboardLinkTemplate : nrlConfigObj.ReportLinkTemplate;
-
 			var fullName = report.Name;
 			if (report.Category != null && report.Category != '')
 				fullName = report.Category + nrlConfigObj.CategoryCharacter + fullName;
 			directLink = linkTemplate + report.UrlEncodedName;
 			printLink = "\'rs.aspx?rn=" + report.UrlEncodedName + "&print=1\'";
 			designLink = designTemplate[0] + report.UrlEncodedName + designTemplate[1];
-			deleteLink = 'javascript:RL_DeleteNew(\'' + IzLocal.Res('js_AreYouSureYouWantToDeleteMessage', 'Are you sure you want to delete {0}?').replace(/\{0\}/g, fullName.replace('\'', '\\\'')) + '\', \'' + report.UrlEncodedName + '\');';
+			deleteLink = 'javascript:RL_DeleteNew(\'' + IzLocal.Res('js_AreYouSureYouWantToDeleteMessage', 'Are you sure you want to delete {0}?')
+				// RegEx /([#;?%&,.+*~\\':"!^$[\]()=><|\/@])/g escapes characters from the set in square brackets by two slashes
+				.replace(/\{0\}/g, fullName.replace(/([#;?%&,.+*~\\':"!^$[\]()=><|\/@])/g, '\\$1')) + '\', \'' + report.UrlEncodedName + '\');';
 			viewLink = viewTemplate[0] + report.UrlEncodedName + viewTemplate[1];
 			var thumbClass = isTouch ? 'thumb no-hover' : 'thumb';
 			if (!forSelection) {
 				if (nrlConfigObj.ThumbnailsAllowed) {
-					content += '<a href="' + directLink + '" onclick="javascript:event=event||window.event;if((event.which==null&&event.button<2)||(event.which!=null&&event.which<2)){if(event.preventDefault){event.preventDefault();}else{event.returnValue=false;}return false;}">';
-					content += '<div class="' + thumbClass + '" onclick="javascript:event=event||window.event;if((event.which==null&&event.button<2)||(event.which!=null&&event.which<2))' + viewLink + '" id="">';
+					content += '<a href="' + directLink + '" onclick="javascript:var evt=event||window.event;if((evt.which==null&&evt.button<2)||(evt.which!=null&&evt.which<2)){if(evt.preventDefault){evt.preventDefault();}else{evt.returnValue=false;}return false;}">';
+					content += '<div class="' + thumbClass + '" onclick="javascript:var evt=event||window.event;if((evt.which==null&&evt.button<2)||(evt.which!=null&&evt.which<2))' + viewLink + '" id="">';
 					content += '<div class="thumb-container" style="background-color:white;width:' + nrlConfigObj.ThumbnailWidth + 'px;height:' + nrlConfigObj.ThumbnailHeight + 'px;"><img src="' + report.ImgUrl + '" />';
 					content += '<div class="thumb-buttons">';
-					if (!report.ViewOnly && !report.IsLocked && nrlConfigObj.AllowDesignReports)
+					if (!report.ViewOnly && !report.IsLocked && nrlConfigObj.AllowDesignReports) {
 						content += '<div class="thumb-edit" onclick="event.cancelBubble = true;(event.stopPropagation) ? event.stopPropagation() : event.returnValue = false;(event.preventDefault) ? event.preventDefault() : event.returnValue = false;' + designLink + '" title="' + IzLocal.Res('js_Edit', 'Edit') + '"></div>';
-					if (!report.ReadOnly && !report.ViewOnly && !report.IsLocked && nrlConfigObj.AllowDeletingReports && nrlConfigObj.AllowDesignReports)
+					}
+					if (!report.ReadOnly && !report.ViewOnly && !report.IsLocked && nrlConfigObj.AllowDeletingReports && nrlConfigObj.AllowDesignReports) {
 						content += '<div class="thumb-remove" onclick="event.cancelBubble = true;(event.stopPropagation) ? event.stopPropagation() : event.returnValue = false;(event.preventDefault) ? event.preventDefault() : event.returnValue = false;' + deleteLink + '" title="' + IzLocal.Res('js_Remove', 'Remove') + '"></div>';
+					}
 					content += '<div class="thumb-print" onclick="event.cancelBubble = true;(event.stopPropagation) ? event.stopPropagation() : event.returnValue = false;(event.preventDefault) ? event.preventDefault() : event.returnValue = false;window.open(' + printLink + ', \'_blank\');" title="' + IzLocal.Res('js_Print', 'Print') + '"></div>';
 					content += '</div>';
 					content += '</div>';
@@ -399,7 +427,7 @@ function AcceptReports(returnObj, id, parameters) {
 		viewTemplate = report.Dashboard ? nrlConfigObj.DashboardViewTemplate : nrlConfigObj.ReportViewTemplate;
 		viewLink = viewTemplate[0] + report.UrlEncodedName + viewTemplate[1];
 		directLink = (report.Dashboard ? nrlConfigObj.DashboardLinkTemplate : nrlConfigObj.ReportLinkTemplate) + report.UrlEncodedName;
-		recentContent += '<li><a onclick="javascript:event=event||window.event;if((event.which==null&&event.button<2)||(event.which!=null&&event.which<2)){' + viewLink + 'if(event.preventDefault){event.preventDefault();}else{event.returnValue=false;}return false;}" href="' + directLink + '">' + report.Name + '</a></li>';
+		recentContent += '<li><a onclick="javascript:var evt=event||window.event;if((evt.which==null&&evt.button<2)||(evt.which!=null&&evt.which<2)){' + viewLink + 'if(evt.preventDefault){evt.preventDefault();}else{evt.returnValue=false;}return false;}" href="' + directLink + '">' + report.Name + '</a></li>';
 	}
 	recentContent += '</ul>';
 	jq$("#reportListDiv")
@@ -410,8 +438,7 @@ function AcceptReports(returnObj, id, parameters) {
 	jq$('#tabs').tabs({ fx: { opacity: 'toggle' } });
 
 	jq$('#tabs').tabs('select', lastlySelectedCat);
-	if (lastlySelectedCat > 0)
-		LeftTabClicked(lastlySelectedCat, tabs.length);
+	LeftTabClicked(lastlySelectedCat, tabs.length);
 
 	jq$('#loadingDiv').hide('fade', null, 400, function() {
 		jq$('#reportListDiv').css('visibility', 'visible');

@@ -40,6 +40,13 @@ namespace IzendaHours.Controllers {
 
     [Authorize]
     [ValidateInput(false)]
+    public ActionResult InstantReportNew()
+    {
+        return View();
+    }
+
+    [Authorize]
+    [ValidateInput(false)]
     public ActionResult Dash()
     {
         return View();

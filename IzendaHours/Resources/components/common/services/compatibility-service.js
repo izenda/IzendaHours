@@ -6,41 +6,18 @@
     function ($window, $log) {
       'use strict';
       var currentRights;
-      var rightNone = "None",
+    	var rightNone = "None",
           rightReadOnly = "Read Only",
           rightViewOnly = "View Only",
           rightLocked = "Locked",
           rightFullAccess = "Full Access";
 
       var checkIsIe8 = function () {
-        var isSpecificIeVersion = function (version, comparison) {
-          var ieCompareOperator = 'IE',
-              b = document.createElement('B'),
-              docElem = document.documentElement,
-              isIeResult;
-          if (version) {
-            ieCompareOperator += ' ' + version;
-            if (comparison) {
-              ieCompareOperator = comparison + ' ' + ieCompareOperator;
-            }
-          }
-          b.innerHTML = '<!--[if ' + ieCompareOperator + ']><b id="iecctest"></b><![endif]-->';
-          docElem.appendChild(b);
-          isIeResult = !!document.getElementById('iecctest');
-          docElem.removeChild(b);
-          var isCompatibilityMode = (typeof (document.documentMode) !== 'undefined') &&
-          ((comparison === 'lte' && document.documentMode <= version)
-            || (comparison === 'gte' && document.documentMode >= version)
-            || (comparison === 'lt' && document.documentMode < version)
-            || (comparison === 'gt' && document.documentMode > version)
-            || (comparison === 'eq' && document.documentMode == version));
-          return isIeResult || isCompatibilityMode;
-        };
         return isSpecificIeVersion(8, 'lte');
       };
 
       var checkIsLteIe10 = function () {
-        return jq$.browser.msie && jq$.browser.version <= 10;
+        return isSpecificIeVersion(10, 'lte');
       };
 
       /**
@@ -77,7 +54,6 @@
       var isFullAccess = function () {
         var rights = getRights();
         var allowed = [rightFullAccess].indexOf(rights) >= 0;
-        allowed = allowed && !isOneColumnView();
         allowed = allowed && !checkIsIe8();
         return allowed;
       };
@@ -86,7 +62,7 @@
        * Check is tile editing allowed
        */
       var isEditAllowed = function () {
-        var rights = getRights();
+      	var rights = getRights();
         var allowed = [rightFullAccess, rightReadOnly].indexOf(rights) >= 0;
         allowed = allowed && !isOneColumnView();
         allowed = allowed && !checkIsIe8();
@@ -99,7 +75,6 @@
       var isSaveAsAllowed = function() {
         var rights = getRights();
         var allowed = [rightFullAccess, rightReadOnly].indexOf(rights) >= 0;
-        allowed = allowed && !isOneColumnView();
         allowed = allowed && !checkIsIe8();
         return allowed;
       };
@@ -110,7 +85,6 @@
       var isFiltersEditAllowed = function() {
         var rights = getRights();
         var allowed = [rightFullAccess, rightReadOnly, rightLocked].indexOf(rights) >= 0;
-        allowed = allowed && !isOneColumnView();
         allowed = allowed && !checkIsIe8();
         return allowed;
       };

@@ -80,9 +80,15 @@ function AjaxRequest(url, parameters, callbackSuccess, callbackError, id, dataTo
 	thisRequestObject.requestId = id;
 	thisRequestObject.dtk = dataToKeep;
 	thisRequestObject.onreadystatechange = ProcessRequest;
-
-	/*thisRequestObject.open('GET', url + '?' + parameters, true);
-    thisRequestObject.send();*/
+	if (typeof (window.izendaPageId$) !== 'undefined') {
+		if (url.indexOf("?") == -1)
+			url = url + "?";
+		else {
+			if (url[url.length - 1] != '&' && url[url.length - 1] != '?')
+				url = url + "&";
+		}
+		url = url + 'izpid=' + window.izendaPageId$;
+	}
 	thisRequestObject.open('POST', url, true);
 	thisRequestObject.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 	thisRequestObject.send(parameters);
@@ -158,8 +164,6 @@ function SendFieldsData(data) {
 function FieldsDataSent(returnObj, id) {
 	if (id != 'updatecrsfields' || returnObj == undefined || returnObj == null || returnObj.Value == null)
 		return;
-	GetFiltersData();
-	//GetRenderedReportSet(true);
 }
 //------------------------------------------------------------------------------------------------------------------
 
@@ -214,8 +218,10 @@ function ChangeTopRecords(recsNum, updateReportData) {
 	for (var i = 0; i < 6; i++)
 		jq$('#resNumLi' + i).removeClass('selected');
 	var resNumImg = document.getElementById('resNumImg');
+	if (!resNumImg) {
+		return;
+	}
 	var uvcVal = '100';
-	var baseUrl = resNumImg.src.substr(0, resNumImg.src.lastIndexOf("ModernImages.") + 13);
 	if (recsNum == 1) {
 		uvcVal = '1';
 		jq$('#resNumLi0').addClass('selected');
@@ -461,7 +467,6 @@ function updateFields() {
 		usedField.Description = fieldsList[i].Description;
 		usedField.Format = fieldsList[i].Format;
 		usedField.Width = fieldsList[i].Width;
-		usedField.FilterOperator = fieldsList[i].FilterOperator;
 		usedField.LabelJ = fieldsList[i].LabelJ;
 		usedField.ValueJ = fieldsList[i].ValueJ;
 		usedField.GUID = fieldsList[i].GUID; // Empty for new fields
@@ -572,46 +577,37 @@ function SetPivotCount() {
 
 //Field advanced properties-------------------------------------------------------------------------------------------------------
 function ShowFieldPropertiesByFullFieldName(fieldName, GUID) {
-	var foundField = -1;
 	var calcFieldIndex = -1;
-
 	var tableAlias = '';
-	for (var i = 0; i < filtersData.length; i++)
+	for (var i = 0; i < filtersData.length; i++) {
 		if (filtersData[i].GUID == GUID) {
 			tableAlias = filtersData[i].AliasTable;
 			break;
 		}
-
-	for (var i = 0; i < fieldsList.length; i++)
-		if (fieldsList[i].DbName == fieldName) {
-			if (foundField >= 0) // Second field on the same column
-				foundField = -1;
-			else
-				foundField = i;	
-		}
-		else if (fieldsList[i].Description == fieldName) {
-			calcFieldIndex = i;
-		}
-
-	if (foundField >= 0) {
-		curPropFInd = foundField;
-		FP_ShowFieldProperties(fieldsList[foundField], fieldPopup);
-		return;
 	}
-
-	for (var dsInd = 0; dsInd < dataSources.length; dsInd++)
-		for (var colInd = 0; colInd < dataSources[dsInd].Columns.length; colInd++)
+	for (var dsInd = 0; dsInd < dataSources.length; dsInd++) {
+		for (var colInd = 0; colInd < dataSources[dsInd].Columns.length; colInd++) {
 			if (dataSources[dsInd].Columns[colInd].DbName == fieldName && (tableAlias == '' || dataSources[dsInd].Columns[colInd].TableJoinAlias == tableAlias)) {
 				var newField = jq$.extend({}, dataSources[dsInd].Columns[colInd]);
 				newField.FilterGUID = GUID;
-				for (var i = 0; i < filtersData.length; i++)
+				for (var i = 0; i < filtersData.length; i++) {
 					if (filtersData[i].GUID == GUID) {
 						newField.FilterOperator = filtersData[i].OperatorValue;
+						newField.Description = filtersData[i].Alias;
 						break;
 					}
-				FP_ShowFieldProperties(newField, fieldPopup);
+				}
+				FP_ShowFilterProperties(newField, fieldPopup);
 				return;
 			}
+		}
+	}
+	for (var i = 0; i < fieldsList.length; i++) {
+		if (fieldsList[i].Description == fieldName) {
+			calcFieldIndex = i;
+			break;
+		}
+	}
 	if (calcFieldIndex >= 0) {
 		curPropFInd = calcFieldIndex;
 		FP_ShowFieldProperties(fieldsList[calcFieldIndex], fieldPopup);
@@ -635,16 +631,12 @@ function ShowFieldProperties() {
 function updateFieldProperties(newField) {
 	fieldsList[curPropFInd].Description = newField.Description;
 	fieldsList[curPropFInd].Total = newField.Total;
-	fieldsList[curPropFInd].VG = newField.VG
+	fieldsList[curPropFInd].VG = newField.VG;
 	fieldsList[curPropFInd].IsMultilineHeader = newField.IsMultilineHeader;
 	fieldsList[curPropFInd].Format = newField.Format;
 	fieldsList[curPropFInd].Width = newField.Width;
-	fieldsList[curPropFInd].FilterOperator = newField.FilterOperator;
 	fieldsList[curPropFInd].LabelJ = newField.LabelJ;
 	fieldsList[curPropFInd].ValueJ = newField.ValueJ;
-	for (var i = 0; i < fieldsList.length; i++)
-		if (i != curPropFInd && fieldsList[i].DbName == fieldsList[curPropFInd].DbName)
-			fieldsList[i].FilterOperator = newField.FilterOperator;
 	updateFields();
 }
 //------------------------------------------------------------------------------------------------------------------
@@ -667,14 +659,6 @@ function AddRemainingFields() {
 					break;
 				}
 		}
-
-		for (var j = 0; j < fieldsList.length; j++)
-			if (fieldsList[j].DbName == newField.DbName && fieldsList[j].FilterOperator != '') {
-				newField.FilterOperator = fieldsList[j].FilterOperator;
-				newField.DupFilter = true;
-				fieldsList[j].DupFilter = true;
-				break;
-			}
 		fieldsList.push(newField);
 	}
 	wereChecked.length = 0;
@@ -846,6 +830,18 @@ function ShowSaveAsDialog() {
 function SaveReportAs() {
 	var newRepName = document.getElementById('newReportName').value;
 	var newCatName = document.getElementById('newCategoryName').value;
+
+	newRepName = CheckNameValidity(newRepName);
+	if (newRepName == null) {
+		alert(IzLocal.Res('jsInvalidReportName', 'Invalid Report Name'));
+		return false;
+	}
+	newCatName = CheckNameValidity(newCatName);
+	if (newCatName == null) {
+		alert(IzLocal.Res('InvalidCategoryName', 'Invalid Category Name'));
+		return false;
+	}
+
 	var newFullName = newRepName;
 	if (newCatName != null && newCatName != '' && newCatName != IzLocal.Res('js_Uncategorized', 'Uncategorized')) {
 		newFullName = newCatName + nrvConfig.CategoryCharacter + newFullName;
@@ -853,7 +849,21 @@ function SaveReportAs() {
 	while (newFullName.indexOf(' ') >= 0) {
 		newFullName = newFullName.replace(' ', '+');
 	}
+
 	CheckIfReportExists(newFullName);
+}
+
+function CheckNameValidity(name) {
+	var invalidCharsRegex = new RegExp("[^A-Za-z0-9_\\\-'' ]+", 'g');
+	if (nrvConfig.AllowInvalidCharacters)
+		return name;
+	if (nrvConfig.StripInvalidCharacters)
+		name = name.replace(invalidCharsRegex, '');
+
+	if (name.match(invalidCharsRegex))
+		return null;
+
+	return name;
 }
 
 function CheckIfReportExists(reportFullName) {
@@ -1002,11 +1012,15 @@ function InitializePopup() {
 		buttons: {
 			"OK": function () {
 				switchTabAfterRefreshCycle = true;
-				var field = FP_CollectProperties();
-				if (field.FilterGUID && field.FilterGUID != 'undefined')
-					CommitChangedFilter(field);
-				else
+				var propDialogMode = document.getElementById('propDialogMode');
+				if (propDialogMode.value == 'filter') {
+					var filter = FP_CollectFilterProperties();
+					CommitChangedFilter(filter);
+				}
+				else if (propDialogMode.value == 'field') {
+					var field = FP_CollectFieldProperties();
 					updateFieldProperties(field);
+				}
 				jq$(this).dialog("close");
 			},
 			"Cancel": function () {
@@ -1068,6 +1082,9 @@ function GetReportViewerConfig() {
     var rnParam = '';
     if (reportName)
     	rnParam = reportName;
+    else if (typeof UrlSettings == 'function')
+
+	    rnParam = UrlSettings().reportInfo.fullName;
     var requestString = 'wscmd=reportviewerconfig&wsarg0=' + wwidth + '&wsarg1=' + wheight + '&wsarg2=' + rnParam;
 	AjaxRequest('./rs.aspx', requestString, GotReportViewerConfig, null, 'reportviewerconfig');
 }
@@ -1177,10 +1194,19 @@ function GotRenderedReportSet(returnObj, id) {
 
 function FirstLoadInit() {
 	var designerBtn = document.getElementById('designerBtn');
-	var reportParam = '';
-	if (reportName != undefined && reportName != null)
-		reportParam = '?rn=' + reportName;
-	designerBtn.onclick = function () { window.location = nrvConfig.ReportDesignerUrl + reportParam; };
+	if (designerBtn) {
+		var reportParam = '';
+		if (reportName != undefined && reportName != null) {
+			reportParam = '?rn=' + reportName;
+		}
+		designerBtn.onclick = function () {
+			if (nrvConfig.DesignerType === 'InstantReport') {
+				window.location = nrvConfig.InstantReportUrl + reportParam;
+			} else {
+				window.location = nrvConfig.ReportDesignerUrl + reportParam;
+			}
+		};
+	}
 	jq$('#navdiv ul li a').click(function () {
 		var currentTab = jq$(this).attr('href');
 		var vis = jq$(currentTab).is(':visible');
@@ -1199,9 +1225,9 @@ function FirstLoadInit() {
 		}
 	});
 
-    InitializeFields();
-    RefreshPivots();   
-    GetFiltersData();
+	InitializeFields();
+	RefreshPivots();   
+	GetFiltersData();
 }
 
 function AppendReportNameTitle(forcedReportName){
@@ -1213,8 +1239,6 @@ function AppendReportNameTitle(forcedReportName){
 		rnVal = fieldWithRn.value;
 	else if (reportName == undefined || reportName == null)
 		rnVal = '';
-	else
-		rnVal = reportName;
 
 	while (rnVal.indexOf('+') >= 0) {
 		rnVal = rnVal.replace('+', ' ');
@@ -1237,7 +1261,8 @@ function AppendReportNameTitle(forcedReportName){
 		rntc = rntc.substr(7);
 	var hdr = '<h1 style=\"margin-left:40px;\">' + rntc + (catPart.length <= 0 ? '' : ' <i>(' + catPart + ')</i>') + '</h1>';
 	var repHeader = document.getElementById('repHeader');
-	repHeader.innerHTML = hdr;
+	if (typeof repHeader != 'undefined' && repHeader != null)
+		repHeader.innerHTML = hdr;
 }
 
 function GetDatasourcesList() {

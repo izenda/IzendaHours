@@ -6,22 +6,9 @@ angular
   .module('izendaQuery')
   .factory('$izendaDashboardToolbarQuery', [
     '$izendaRsQuery',
-    '$log',
-    function ($izendaRsQuery, $log) {
+		'$izendaLocale',
+    function ($izendaRsQuery, $izendaLocale) {
       'use strict';
-
-      function setCurrentReportSet(dashboardFullName) {
-        return $izendaRsQuery.query('setcurrentreportset', [dashboardFullName], {
-          dataType: 'text'
-        },
-        // custom error handler:
-        {
-          handler: function (name) {
-            return 'Failed to set dashboard "' + name + '"';
-          },
-          params: [dashboardFullName]
-        });
-      }
 
       function loadDashboardNavigation() {
         return $izendaRsQuery.query('getdashboardcategories', [], {
@@ -30,41 +17,35 @@ angular
         // custom error handler:
         {
           handler: function () {
-            return 'Failed to get dashboard categories';
+	          return $izendaLocale.localeText('js_DashboardLoadCatsError', 'Failed to get dashboard categories');
           }
         });
       }
 
       /**
-       * Load rendered for print dashboard
+       * Send report via email
        */
-      function loadDashboardForPrint() {
-        return $izendaRsQuery.rsQuery({
-          'p': 'htmlreport',
-          'printmanual': '1'
-        }, {
-          dataType: 'text'
-        },
-        // custom error handler:
-        {
-          handler: function () {
-            return 'Failed to load dashboard for print';
-          },
-          params: []
-        });
-      }
-
-      /**
-       * Create new dashboard report set and set it as CurrentReportSet
-       */
-      function newDashboard() {
-        return $izendaRsQuery.query('newcrsdashboard', [], {
+      function sendReportViaEmail(type, to) {
+        return $izendaRsQuery.query('sendReportEmail', [type, to], {
           dataType: 'json'
         },
         // custom error handler:
         {
           handler: function () {
-            return 'Failed to create new dashboard';
+          	return $izendaLocale.localeText('js_DashboardSendEmailError', 'Failed to send report to email');
+          },
+          params: []
+        });
+      }
+
+      function loadAutoRefreshIntervals() {
+        return $izendaRsQuery.query('autorefreshintervals', [], {
+          dataType: 'json'
+        },
+        // custom error handler:
+        {
+          handler: function () {
+          	return $izendaLocale.localeText('js_DashboardAutoRefreshError', 'Failed to get auto refresh intervals');
           },
           params: []
         });
@@ -73,8 +54,7 @@ angular
       // PUBLIC API
       return {
         loadDashboardNavigation: loadDashboardNavigation,
-        setCurrentReportSet: setCurrentReportSet,
-        newDashboard: newDashboard,
-        loadDashboardForPrint: loadDashboardForPrint
+        sendReportViaEmail: sendReportViaEmail,
+        loadAutoRefreshIntervals: loadAutoRefreshIntervals
       };
     }]);

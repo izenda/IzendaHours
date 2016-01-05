@@ -2,16 +2,89 @@
 
 /* HTML */
 
+@font-face {
+	font-family: "SourceSansProRegular";
+	src: url("../../rs.aspx?font=Fonts.SourceSansPro-Regular.otf");
+}
+
 html, body {
-  height: 100%; /* needed for container min-height */
+  height: 100%;
+	margin: 0;
+	padding: 0;
 }
 
 body {
   font-family: "Segoe UI", Tahoma, Verdana, Arial, Helvetica, sans-serif;
-  font-size: 99.99%;
 	color: black;
 	background-color: #fff;
 }
+
+/* MASTER LAYOUT */
+
+.izenda-layout-wrapper {
+	width: 100%;
+	min-width: 320px;
+	min-height: 100%;
+	height: auto !important;
+	height: 100%;
+}
+
+.izenda-layout-header {
+	height: auto;
+}
+
+.izenda-layout-middle {
+	width: 100%;
+	padding: 0 0 50px;
+	position: relative;
+}
+.izenda-layout-middle:after {
+	display: table;
+	clear: both;
+	content: '';
+}
+.izenda-layout-container {
+	width: 100%;
+}
+
+.izenda-layout-main-navbar {
+	margin-bottom: 0;
+}
+
+.izenda-layout-footer {
+	margin: -50px auto 0;
+	min-width: 320px;
+	height: 50px;
+	color: #aaaaaa;
+	text-align: right;
+	position: relative;
+}
+
+.izenda-layout-footer .copyright {
+	display: inline-block;
+	padding-right: 16px;
+	margin-top: 16px;
+}
+
+.izenda-new-report-button {
+	border: 0;
+	padding-top: 14px;
+	padding-bottom: 14px;
+	background-color: #1862A4 !important;
+	color: #fff;
+}
+
+.izenda-new-report-button:hover,
+.izenda-new-report-button:focus {
+	color: #fff !important;
+	background-color: #1b70ba !important;
+}
+
+.izenda-new-report-button:visited {
+	color: #fff !important;
+}
+
+/* END OF MASTER LAYOUT */
 
 p {
   margin: .75em 0;
@@ -145,9 +218,13 @@ th, td {
 }
 
 /* Links */
+a {
+  cursor: pointer;
+}
+
 a:link {
   color: #0000ff;
-  text-decoration: underline;
+  /*text-decoration: underline;*/
 }
 :visited {
   color: #6b19a8;
@@ -240,10 +317,8 @@ a span.plus {
 	opacity: .75;
 }
 
-
 .top-nav, ul#topnav ul {
-	background-color: #1c4e89
-;
+	background-color: #1c4e89;
 }
 .top-nav {
   font-family: "Segoe UI", Tahoma, Verdana, Arial, Helvetica, sans-serif;
@@ -350,7 +425,7 @@ table[cellpadding="10"] > thead > tr > td, table[cellpadding="10"] > tbody > tr 
   position: relative;
 }
 #RL_QuickSearchBox {
-	width: 100%;
+  width: 100%;
   color: #858585 !important;
   border: 1px solid #aaa;
   padding: 0;
@@ -365,6 +440,11 @@ table[cellpadding="10"] > thead > tr > td, table[cellpadding="10"] > tbody > tr 
   position: relative;
   left: -4px;
   background-color: #fff;
+}
+#RL_QuickSearchBox::-ms-clear {
+  display: none;
+  width : 0;
+  height: 0;
 }
 .search-icon {
   display: block;
@@ -384,6 +464,7 @@ table[cellpadding="10"] > thead > tr > td, table[cellpadding="10"] > tbody > tr 
 	position: absolute;
 	top: 7px;
 	opacity: .5;
+	filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=50);
 }
 
 
@@ -400,7 +481,8 @@ table[cellpadding="10"] > thead > tr > td, table[cellpadding="10"] > tbody > tr 
 }
 
 /* Designer Overrides */
-input[name$="DistinctBox"] {
+input[name$="DistinctBox"],
+input[name$="AllowNulls"] {
     margin-left: 5px;
     margin-top: 5px;
 }
@@ -643,16 +725,16 @@ tr.ReportFooter td {
   width:  170px;
   height: 220px;
 }
-.iz-ui-tabs-panel div.thumb:hover:not(.no-hover):not(.no-hover) img,
+.iz-ui-tabs-panel div.thumb:hover img,
 .iz-ui-tabs-panel div.thumb.no-hover img{
   opacity: .85;
   outline: none;
 }
-.iz-ui-tabs-panel div.thumb:hover:not(.no-hover) .thumb-container,
+.iz-ui-tabs-panel div.thumb:hover .thumb-container,
 .iz-ui-tabs-panel div.thumb:hover.no-hover .thumb-container  {
    outline: none;
 }
-.iz-ui-tabs-panel div.thumb:hover:not(.no-hover) {
+.iz-ui-tabs-panel div.thumb:hover {
   outline: 8px solid #cddbf6;
   background-color: #cddbf6;
 }
@@ -671,7 +753,7 @@ tr.ReportFooter td {
   bottom: 0;
   left: 0;
 }
-.iz-ui-tabs-panel div.thumb:hover:not(.no-hover) .thumb-buttons,
+.iz-ui-tabs-panel div.thumb:hover .thumb-buttons,
 .iz-ui-tabs-panel div.thumb:hover.no-hover .thumb-buttons {
   display: block;
 }
@@ -707,10 +789,10 @@ tr.ReportFooter td {
   bottom: 0px;
 }
 
-.iz-ui-tabs-panel div.thumb:hover:not(.no-hover) .thumb-remove:hover, 
-.iz-ui-tabs-panel div.thumb:hover:not(.no-hover) .thumb-edit:hover, 
-.iz-ui-tabs-panel div.thumb:hover:not(.no-hover) .thumb-template:hover, 
-.iz-ui-tabs-panel div.thumb:hover:not(.no-hover) .thumb-print:hover,
+.iz-ui-tabs-panel div.thumb:hover .thumb-remove:hover, 
+.iz-ui-tabs-panel div.thumb:hover .thumb-edit:hover, 
+.iz-ui-tabs-panel div.thumb:hover .thumb-template:hover, 
+.iz-ui-tabs-panel div.thumb:hover .thumb-print:hover,
 .iz-ui-tabs-panel div.thumb.no-hover .thumb-remove, 
 .iz-ui-tabs-panel div.thumb.no-hover .thumb-edit,
 .iz-ui-tabs-panel div.thumb.no-hover .thumb-template,
@@ -728,7 +810,7 @@ tr.ReportFooter td {
   line-height: 20px;
   padding: 2px 0 0 6px;
   position: relative; 
-  word-break: normal;
+  word-break: break-all;
 }
 
 
@@ -800,10 +882,10 @@ tr.ReportFooter td {
 .iz-ui-tabs-panel div.thumb .thumb-remove {
   display: none;
 }
-.iz-ui-tabs-panel div.thumb:hover:not(.no-hover) .thumb-edit, 
-.iz-ui-tabs-panel div.thumb:hover:not(.no-hover) .thumb-template, 
-.iz-ui-tabs-panel div.thumb:hover:not(.no-hover) .thumb-print,
-.iz-ui-tabs-panel div.thumb:hover:not(.no-hover) .thumb-remove, 
+.iz-ui-tabs-panel div.thumb:hover .thumb-edit, 
+.iz-ui-tabs-panel div.thumb:hover .thumb-template, 
+.iz-ui-tabs-panel div.thumb:hover .thumb-print,
+.iz-ui-tabs-panel div.thumb:hover .thumb-remove, 
 .iz-ui-tabs-panel div.thumb.no-hover .thumb-edit,
 .iz-ui-tabs-panel div.thumb.no-hover .thumb-template,
 .iz-ui-tabs-panel div.thumb.no-hover .thumb-print,
@@ -819,23 +901,23 @@ tr.ReportFooter td {
   right: 0;
   opacity: .75;
 }
-.iz-ui-tabs-panel div.thumb:hover:not(.no-hover) .thumb-remove,
+.iz-ui-tabs-panel div.thumb:hover .thumb-remove,
 .iz-ui-tabs-panel div.thumb.no-hover .thumb-remove {
   background-image: url(../../rs.aspx?image=ModernImages.remove-icon.png);
 }
-.iz-ui-tabs-panel div.thumb:hover:not(.no-hover) .thumb-edit,
+.iz-ui-tabs-panel div.thumb:hover .thumb-edit,
 .iz-ui-tabs-panel div.thumb.no-hover .thumb-edit {
   background-image: url(../../rs.aspx?image=ModernImages.edit-icon.png);
   right: 0px;
   top: auto;
 }
-.iz-ui-tabs-panel div.thumb:hover:not(.no-hover) .thumb-print,
+.iz-ui-tabs-panel div.thumb:hover .thumb-print,
 .iz-ui-tabs-panel div.thumb.no-hover .thumb-print {
   background-image: url(../../rs.aspx?image=ModernImages.print-icon.png);
   right: 28px;
   top: auto;
 }
-.iz-ui-tabs-panel div.thumb:hover:not(.no-hover) .thumb-template,
+.iz-ui-tabs-panel div.thumb:hover .thumb-template,
 .iz-ui-tabs-panel div.thumb.no-hover .thumb-template {
   background-image: url(../../rs.aspx?image=ModernImages.template-icon.png);
   right: 56px;
@@ -953,6 +1035,8 @@ tr.ReportFooter td {
 .top-nav .btn-group.open .btn.dropdown-toggle, 
 .top-nav .btn:hover, .top-nav .dropdown-menu a:hover {
   background-color: #264456 !important;
+  text-decoration: none;
+  color: white;
 }
 .top-nav .btn-group .divider {
   background-color: transparent;
@@ -994,7 +1078,7 @@ tr.ReportFooter td {
 
 .iz-ui-widget-overlay {
   opacity: .5 !important;
-  background-color: #000 !important;
+  background: #000 !important;
 }
 .iz-ui-dialog, 
 .iz-ui-dialog .iz-ui-dialog-buttonpane {
@@ -1095,4 +1179,146 @@ a.button.default:active, a.button.default:active:hover {
   font-weight: bold;
   src: local("Segoe UI Semibold"), local("Segoe UI Bold"), local("Segoe UI"), local("Helvetica Neue");
   unicode-range: U+0000-00FF, U+0300-036F;
+}
+
+.modal .modal-body {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.izenda,
+.izenda * {
+	line-height: 1.42857143;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+.izenda label {
+	display: inline-block;
+	font-weight: normal;
+	margin: 0;
+}
+
+.izenda table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+.izenda-checkbox label {
+	font-size: 16px;
+	font-weight: normal;
+	font-family: SourceSansProRegular, 'Segoe UI', Tahoma, Verdana, Arial, Helvetica, sans-serif;
+	cursor: pointer;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.izenda input[type=checkbox] {
+	cursor: pointer;
+	margin: 2px;
+	padding: 0;
+	vertical-align: middle;
+}
+
+.izenda-checkbox label > input[type=checkbox] {
+	margin-right: 5px !important;
+}
+
+.izenda-btn {
+	display: inline-block;
+	margin: 0;
+	padding: 6px 12px;
+	cursor: pointer;
+	color: #333333;
+	background-color: #ffffff;
+	border: 1px solid #cccccc;
+	border-radius: 0;
+	font-size: 16px;
+	font-weight: normal;
+	font-family: SourceSansProRegular, 'Segoe UI', Tahoma, Verdana, Arial, Helvetica, sans-serif;
+	text-align: center;
+	vertical-align: middle;
+	white-space: nowrap;
+	-ms-touch-action: manipulation;
+	touch-action: manipulation;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.izenda-btn:hover {
+	background-color: #e6e6e6;
+	border-color: #adadad;
+	text-decoration: none;
+}
+
+.izenda-width-100 {
+	width: 100px !important;
+}
+
+.izenda-width-150 {
+	width: 150px !important;
+}
+
+.izenda-width-200 {
+	width: 200px !important;
+}
+
+/* Izenda Dialog */
+.izenda-dialog {
+	background-color: #ffffff !important;
+	border: 1px solid #d5d5d5 !important;
+}
+
+.izenda-dialog-container {
+}
+
+.izenda-dialog-body {
+	padding: 7px 7px 15px 7px;
+	max-height: 600px;
+	overflow: auto;
+}
+
+.izenda-dialog-body th,
+.izenda-dialog-body td {
+	padding: 6px;
+}
+
+.izenda-dialog-footer {
+	padding: 15px 7px 7px 7px;
+	text-align: right;
+	border-top: 1px solid #d5d5d5;
+}
+
+.izenda-dialog-footer .izenda-btn+.izenda-btn {
+	margin-left: 5px;
+	margin-bottom: 0;
+}
+
+.izenda-dialog-btn-primary {
+	color: #ffffff;
+	background-color: #1c4e89;
+	border-color: #184274;
+}
+
+.izenda-dialog-btn-primary:hover {
+	color: #ffffff;
+	background-color: #13365f;
+	border-color: #0d2541;
+}
+
+.izenda-dialog-btn-default {
+	color: #333333;
+	background-color: #ffffff;
+	border-color: #cccccc;
+}
+
+.izenda-dialog-btn-default:hover {
+	color: #333333;
+	background-color: #e6e6e6;
+	border-color: #adadad;
 }
