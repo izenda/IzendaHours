@@ -390,12 +390,15 @@
     <Content Include="Reporting\Resources\components\dashboard\css\dashboard.css" />
     <Content Include="Reporting\Resources\components\dashboard\directives\dashboard-background.js" />
     <Content Include="Reporting\Resources\components\dashboard\directives\tile-top-slider.js" />
+    <Content Include="Reporting\Resources\components\dashboard\directives\toolbar-folder-menu-accordion.js" />
     <Content Include="Reporting\Resources\components\dashboard\directives\toolbar-links-panel.js" />
     <Content Include="Reporting\Resources\components\dashboard\module-definition.js" />
     <Content Include="Reporting\Resources\components\dashboard\services\background-service.js" />
     <Content Include="Reporting\Resources\components\dashboard\services\dashboard-query-service.js" />
+    <Content Include="Reporting\Resources\components\dashboard\services\dashboard-state-service.js" />
     <Content Include="Reporting\Resources\components\dashboard\services\toolbar-query-service.js" />
     <Content Include="Reporting\Resources\components\dashboard\templates\dashboard.html" />
+    <Content Include="Reporting\Resources\components\dashboard\templates\toolbar-folder-menu-accordion.html" />
     <Content Include="Reporting\Resources\components\dashboard\templates\toolbar-links-panel.html" />
     <Content Include="Reporting\Resources\components\dashboard\templates\toolbar.html" />
     <Content Include="Reporting\Resources\components\filter\controllers\filters-controller.js" />
