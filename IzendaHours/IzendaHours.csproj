@@ -61,6 +61,22 @@
     <Reference Include="EO.Pdf">
       <HintPath>Reporting\bin\EO.Pdf.dll</HintPath>
     </Reference>
+    <Reference Include="evohtmltopdf, Version=6.9.0.0, Culture=neutral, PublicKeyToken=e1fcbb86597de299, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\evohtmltopdf.dll</HintPath>
+    </Reference>
+    <Reference Include="EvoHtmlToPdfClient, Version=6.9.0.0, Culture=neutral, PublicKeyToken=e1fcbb86597de299, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\EvoHtmlToPdfClient.dll</HintPath>
+    </Reference>
+    <Reference Include="HtmlAgilityPack, Version=1.4.9.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\HtmlAgilityPack.dll</HintPath>
+    </Reference>
+    <Reference Include="HtmlSanitizationLibrary, Version=4.3.0.0, Culture=neutral, PublicKeyToken=d127efab8a9c114f, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\HtmlSanitizationLibrary.dll</HintPath>
+    </Reference>
     <Reference Include="itextsharp">
       <HintPath>Reporting\bin\itextsharp.dll</HintPath>
     </Reference>
@@ -74,6 +90,10 @@
       <HintPath>Reporting\bin\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="NHunspell, Version=1.2.5554.16953, Culture=neutral, PublicKeyToken=1ac793ea843b4366, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\NHunspell.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -325,24 +345,37 @@
     <Content Include="Reporting\elrte\js\i18n\elrte.zh_TW.js" />
     <Content Include="Reporting\elrte\js\jquery-1.6.1.min.js" />
     <Content Include="Reporting\elrte\js\jquery-ui-1.8.13.custom.min.js" />
+    <Content Include="Reporting\Resources\components\common\controllers\message-controller.js" />
+    <Content Include="Reporting\Resources\components\common\controllers\notification-controller.js" />
     <Content Include="Reporting\Resources\components\common\controllers\schedule-controller.js" />
     <Content Include="Reporting\Resources\components\common\controllers\select-report-controller.js" />
     <Content Include="Reporting\Resources\components\common\controllers\select-report-name-controller.js" />
     <Content Include="Reporting\Resources\components\common\controllers\share-controller.js" />
     <Content Include="Reporting\Resources\components\common\css\common.css" />
+    <Content Include="Reporting\Resources\components\common\directive\align-switcher.js" />
     <Content Include="Reporting\Resources\components\common\directive\bootstrap-modal.js" />
+    <Content Include="Reporting\Resources\components\common\directive\bootstrap.js" />
     <Content Include="Reporting\Resources\components\common\directive\color-picker.js" />
     <Content Include="Reporting\Resources\components\common\directive\datetime-picker.js" />
+    <Content Include="Reporting\Resources\components\common\directive\report-viewer.js" />
     <Content Include="Reporting\Resources\components\common\directive\select-checkboxes.js" />
     <Content Include="Reporting\Resources\components\common\directive\switcher.js" />
     <Content Include="Reporting\Resources\components\common\directive\toggle-button.js" />
+    <Content Include="Reporting\Resources\components\common\directive\utility.js" />
     <Content Include="Reporting\Resources\components\common\module-definition.js" />
     <Content Include="Reporting\Resources\components\common\services\common-query-service.js" />
     <Content Include="Reporting\Resources\components\common\services\compatibility-service.js" />
+    <Content Include="Reporting\Resources\components\common\services\event-service.js" />
+    <Content Include="Reporting\Resources\components\common\services\localization-service.js" />
     <Content Include="Reporting\Resources\components\common\services\ping-service.js" />
     <Content Include="Reporting\Resources\components\common\services\rs-query-service.js" />
+    <Content Include="Reporting\Resources\components\common\services\schedule-service.js" />
     <Content Include="Reporting\Resources\components\common\services\settings-service.js" />
+    <Content Include="Reporting\Resources\components\common\services\share-service.js" />
     <Content Include="Reporting\Resources\components\common\services\url-service.js" />
+    <Content Include="Reporting\Resources\components\common\templates\message.html" />
+    <Content Include="Reporting\Resources\components\common\templates\notification.html" />
+    <Content Include="Reporting\Resources\components\common\templates\schedule-nomodal.html" />
     <Content Include="Reporting\Resources\components\common\templates\schedule.html" />
     <Content Include="Reporting\Resources\components\common\templates\select-report-name.html" />
     <Content Include="Reporting\Resources\components\common\templates\select-report.html" />
@@ -1272,24 +1305,37 @@
     <Content Include="Reporting\Resources\Vis\Uncategorized\Tree\Preview.png" />
     <Content Include="Reporting\Resources\Vis\Uncategorized\Tree\View.html" />
     <Content Include="Reporting\rs.aspx" />
+    <Content Include="Resources\components\common\controllers\message-controller.js" />
+    <Content Include="Resources\components\common\controllers\notification-controller.js" />
     <Content Include="Resources\components\common\controllers\schedule-controller.js" />
     <Content Include="Resources\components\common\controllers\select-report-controller.js" />
     <Content Include="Resources\components\common\controllers\select-report-name-controller.js" />
     <Content Include="Resources\components\common\controllers\share-controller.js" />
     <Content Include="Resources\components\common\css\common.css" />
+    <Content Include="Resources\components\common\directive\align-switcher.js" />
     <Content Include="Resources\components\common\directive\bootstrap-modal.js" />
+    <Content Include="Resources\components\common\directive\bootstrap.js" />
     <Content Include="Resources\components\common\directive\color-picker.js" />
     <Content Include="Resources\components\common\directive\datetime-picker.js" />
+    <Content Include="Resources\components\common\directive\report-viewer.js" />
     <Content Include="Resources\components\common\directive\select-checkboxes.js" />
     <Content Include="Resources\components\common\directive\switcher.js" />
     <Content Include="Resources\components\common\directive\toggle-button.js" />
+    <Content Include="Resources\components\common\directive\utility.js" />
     <Content Include="Resources\components\common\module-definition.js" />
     <Content Include="Resources\components\common\services\common-query-service.js" />
     <Content Include="Resources\components\common\services\compatibility-service.js" />
+    <Content Include="Resources\components\common\services\event-service.js" />
+    <Content Include="Resources\components\common\services\localization-service.js" />
     <Content Include="Resources\components\common\services\ping-service.js" />
     <Content Include="Resources\components\common\services\rs-query-service.js" />
+    <Content Include="Resources\components\common\services\schedule-service.js" />
     <Content Include="Resources\components\common\services\settings-service.js" />
+    <Content Include="Resources\components\common\services\share-service.js" />
     <Content Include="Resources\components\common\services\url-service.js" />
+    <Content Include="Resources\components\common\templates\message.html" />
+    <Content Include="Resources\components\common\templates\notification.html" />
+    <Content Include="Resources\components\common\templates\schedule-nomodal.html" />
     <Content Include="Resources\components\common\templates\schedule.html" />
     <Content Include="Resources\components\common\templates\select-report-name.html" />
     <Content Include="Resources\components\common\templates\select-report.html" />
