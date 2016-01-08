@@ -7,6 +7,7 @@
     using System.IO;
     using Izenda.AdHoc;
     using Izenda.Fusion;
+    using Izenda.AdHoc.Database;
 
     [Serializable]
     public class CustomAdHocConfig : DatabaseAdHocConfig
@@ -18,6 +19,7 @@
             AdHocSettings.LicenseKey = "IZENDA_LICENSE_KEY";
             AdHocSettings.AdHocConfig = new CustomAdHocConfig();
             AdHocSettings.SqlServerConnectionString = @"SQL_SERVER_CONNECTION_STRING";
+            
             AdHocSettings.GenerateThumbnails = true;
             AdHocSettings.ShowSimpleModeViewer = true;
             AdHocSettings.IdentifiersRegex = "^.*[iI][Dd]$";
@@ -38,15 +40,9 @@
             AdHocSettings.ShowJoinAliasTextboxes = true;
             AdHocSettings.ShowJoinDropDown = true;
             AdHocSettings.ShowAdditionalJoinConditions = true;
-            AdHocSettings.VisibleDataSources = new string[] { "Projects", "Records", "Tasks" };
-            AdHocSettings.ReportsPath = Path.Combine(HttpContext.Current.Server.MapPath("~/"), "Reports");
-            //AdHocSettings.PrintMode = PrintMode.Html2PdfAndHtml;
-            AdHocSettings.EvoAzureServiceConfig = new EvoPdfAzureCloudServiceConfig("192.168.1.7", 40001, "password");
-
+            AdHocSettings.EvoAzureServiceConfig = new EvoPdfAzureCloudServiceConfig("127.0.0.1", 40001, "password"); 
             AdHocSettings.PdfPrintMode = PdfMode.EvoPdfAzureCloudService;
-
             AdHocSettings.ChartingEngine = ChartingEngine.HtmlChart;
-            
             HttpContext.Current.Session["ReportingInitialized"] = true;
         }
     }

@@ -76,3 +76,15 @@ $(document).ready(function () {
     $("#ProjectId").select2();
     $("#TaskId").select2();
 });
+
+$("#createTable").each(function () {
+    $(this).dataTable({
+        "aoColumns": [{ "bSortable": false }, null],
+        "bFilter": false,
+        "bInfo": false,
+        "bPaginate": false
+    })
+});
+
+
+

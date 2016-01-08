@@ -15,7 +15,7 @@ namespace IzendaHours.Controllers
     public class RecordsController : Controller
     {
         private IzendaHoursEntities db = new IzendaHoursEntities();
-
+        
         // GET: Records
         [Authorize]
         public ActionResult Index()
@@ -25,12 +25,16 @@ namespace IzendaHours.Controllers
                 var email = User.Identity.GetUserName();
                 var name = email.Split('.');
                 var firstName = name[0];
-                var records = db.Records.Include(r => r.Project).Include(r => r.Task);
+                var records = db.Records
+                    .Include(r => r.Project)
+                    .Include(r => r.Task);
+                var userRecords = records.ToList()
+                    .Where(user => user.EmployeeId.Contains(firstName.First().ToString().ToUpper() + firstName.Substring(1)));
                 if (User.Identity.GetUserName() == "admin")
                 {
                    return View(records.ToList());
                 }
-                return View(records.ToList().Where(user => user.EmployeeId.Contains(firstName.First().ToString().ToUpper() + firstName.Substring(1))));
+                return View(userRecords);
             }
             return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
         }
@@ -55,6 +59,7 @@ namespace IzendaHours.Controllers
         [Authorize]
         public ActionResult Create()
         {
+
             if (User.Identity.IsAuthenticated)
             {
                 ViewBag.ProjectId = new SelectList(db.Projects.OrderBy(model => model.Project1), "ProjectId", "Project1");
@@ -64,12 +69,26 @@ namespace IzendaHours.Controllers
             return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
         }
 
+        // GET: Records/Create Partial View (Table)
+        [ChildActionOnly]
+        public ActionResult _CreateRecordsTable()
+        {
+            var email = User.Identity.GetUserName();
+            var name = email.Split('.');
+            var firstName = name[0];
+            var records = db.Records.Include(r => r.Project).Include(r => r.Task);
+            var todaysRecords = records.ToList()
+                .Where(user => user.EmployeeId.Contains(firstName.First().ToString().ToUpper() + firstName.Substring(1)))
+                .Where(d => d.RecordDate == DateTime.Today);
+            return PartialView(todaysRecords);
+        }
+
         // POST: Records/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "EntryId,EmployeeId,TaskId,CaseNo,ProjectId,Hours,WikiLink,Notes,RecordDate")] Record record)
+        public ActionResult Create([Bind(Include = "EntryId,EmployeeId,TaskId,CaseNo,ProjectId,Hours,WikiLink,Notes,RecordDate")] Record record, string Command)
         {
             if (ModelState.IsValid)
             {
@@ -79,6 +98,10 @@ namespace IzendaHours.Controllers
                 record.EmployeeId = firstName.First().ToString().ToUpper() + firstName.Substring(1);
                 db.Records.Add(record);
                 db.SaveChanges();
+                if (Command == "Create & New")
+                {
+                    return RedirectToAction("Create");
+                }
                 return RedirectToAction("Index");
             }
 

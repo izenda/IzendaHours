@@ -9,6 +9,16 @@
   <script type="text/javascript" src="./rs.aspx?js=ModernScripts.modernizr-2.8.3.min"></script>
   <script type="text/javascript" src="./rs.aspx?js=jQuery.jq"></script>
   <script type="text/javascript" src="./rs.aspx?js=jQuery.jqui"></script>
+  <style type="text/css">
+    .modal {
+        position: absolute;
+    }
+    .modal-dialog{
+        position: absolute;
+        left: 15%;
+    }
+  </style>
+    
 }
 
 @section header { 
@@ -16,3 +26,11 @@
 }
 
 @Html.Partial("_Dashboards-New-Body-Angular")
+
+<script type="text/javascript">
+    document.getElementById("customstyle").disabled = true;
+</script>
+
+
+
+

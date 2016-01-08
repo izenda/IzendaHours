@@ -1,0 +1,38 @@
+﻿@model IEnumerable<IzendaHours.Models.Record>
+
+<table id="createTable" class="table table-responsive table-striped">
+    <caption>Today's Hours</caption>
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Project.Project1)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Hours)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CaseNo)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Project.Project1)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Hours)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CaseNo)
+                </td>
+            </tr>
+
+        }
+    </tbody>
+</table>
+
+
+
