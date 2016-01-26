@@ -1,10 +1,7 @@
 ﻿namespace IzendaHours
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using System.Web;
-    using System.IO;
     using Izenda.AdHoc;
     using Izenda.Fusion;
     using Izenda.AdHoc.Database;
@@ -16,10 +13,11 @@
         {
             if (HttpContext.Current.Session == null || HttpContext.Current.Session["ReportingInitialized"] != null)
                 return;
-            AdHocSettings.LicenseKey = "IZENDA_LICENSE_KEY";
+            AdHocSettings.LicenseKey = "INSERT_LICENSE_KEY";
             AdHocSettings.AdHocConfig = new CustomAdHocConfig();
             AdHocSettings.SqlServerConnectionString = @"SQL_SERVER_CONNECTION_STRING";
-            
+            FusionDriver.AddSqlConnection("SecondString", @"ANOTHER_SQL_CONNECTION_STRING");
+            ((DatabaseAdHocConfig)AdHocSettings.AdHocConfig).SavedReportsDriver = new MSSQLDriver("REPORTS_CONNECTION_STRING");
             AdHocSettings.GenerateThumbnails = true;
             AdHocSettings.ShowSimpleModeViewer = true;
             AdHocSettings.IdentifiersRegex = "^.*[iI][Dd]$";
@@ -40,7 +38,7 @@
             AdHocSettings.ShowJoinAliasTextboxes = true;
             AdHocSettings.ShowJoinDropDown = true;
             AdHocSettings.ShowAdditionalJoinConditions = true;
-            AdHocSettings.EvoAzureServiceConfig = new EvoPdfAzureCloudServiceConfig("127.0.0.1", 40001, "password"); 
+            AdHocSettings.EvoAzureServiceConfig = new EvoPdfAzureCloudServiceConfig("127.0.0.1", 40001, "yourpassword");
             AdHocSettings.PdfPrintMode = PdfMode.EvoPdfAzureCloudService;
             AdHocSettings.ChartingEngine = ChartingEngine.HtmlChart;
             HttpContext.Current.Session["ReportingInitialized"] = true;

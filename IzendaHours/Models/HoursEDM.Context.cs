@@ -28,5 +28,6 @@ namespace IzendaHours.Models
         public virtual DbSet<Project> Projects { get; set; }
         public virtual DbSet<Record> Records { get; set; }
         public virtual DbSet<Task> Tasks { get; set; }
+        public virtual DbSet<ReactView> ReactViews { get; set; }
     }
 }

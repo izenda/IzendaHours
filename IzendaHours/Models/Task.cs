@@ -11,7 +11,6 @@ namespace IzendaHours.Models
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations;
     
     public partial class Task
     {
@@ -21,8 +20,6 @@ namespace IzendaHours.Models
         }
     
         public int TaskId { get; set; }
-
-        [Display(Name = "Task")]
         public string Task1 { get; set; }
     
         public virtual ICollection<Record> Records { get; set; }

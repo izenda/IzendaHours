@@ -11,32 +11,17 @@ namespace IzendaHours.Models
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations;
     
     public partial class Record
     {
         public int EntryId { get; set; }
-
-        [Display(Name = "Employee")]
         public string EmployeeId { get; set; }
-
-        [Display(Name = "Task")]
         public int TaskId { get; set; }
-
-        [Display(Name = "FB Case")]
         public string CaseNo { get; set; }
-
-        [Display(Name = "Customer")]
         public int ProjectId { get; set; }
-
         public Nullable<decimal> Hours { get; set; }
-        
-        [Display(Name = "Wiki Article")]
         public string WikiLink { get; set; }
-
         public string Notes { get; set; }
-
-        [Display(Name = "Date")]
         public System.DateTime RecordDate { get; set; }
     
         public virtual Project Project { get; set; }

@@ -1,4 +1,4 @@
-﻿// T4 code generation is enabled for model 'c:\users\shahe_000\documents\visual studio 2013\Projects\IzendaHours\IzendaHours\Models\HoursEDM.edmx'. 
+﻿// T4 code generation is enabled for model 'C:\dev\IzendaHours\IzendaHours\Models\HoursEDM.edmx'. 
 // To enable legacy code generation, change the value of the 'Code Generation Strategy' designer
 // property to 'Legacy ObjectContext'. This property is available in the Properties Window when the model
 // is open in the designer.
