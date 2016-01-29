@@ -1,6 +1,5 @@
 ﻿using System.Web;
 using System.Web.Optimization;
-using System.Web.Optimization.React;
 
 namespace IzendaHours
 {
@@ -28,10 +27,8 @@ namespace IzendaHours
                       "~/Content/bootstrap.css",
                       "~/Content/site.css"));
 
-            bundles.Add(new BabelBundle("~/bundles/jsx").Include(
-                "~/Scripts/react/react.min.js",
-                "~/Scripts/react/react-dom.min.js",
-                "~/Scripts/ReactIzendaHours.jsx"));
+            //bundles.Add(new BabelBundle("~/bundles/jsx").Include(
+            //    "~/Scripts/ReactIzendaHours.jsx"));
         }
     }
 }

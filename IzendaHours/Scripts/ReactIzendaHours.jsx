@@ -76,7 +76,9 @@ var ItemContainer = React.createClass({
 
     render: function(){
         return(
-             <ItemDetailList data={this.state.data} />
+   
+             <ItemDetailList data={this.state.data } />   
+           
         );
 }
 });

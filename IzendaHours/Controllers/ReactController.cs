@@ -19,7 +19,18 @@ namespace IzendaHours.Controllers
     public class ReactController : Controller
     {
         private IzendaHoursEntities db = new IzendaHoursEntities();
-        private static readonly IList<ReactView> _records; 
+        private IRecordRepository repository = null;
+
+        public ReactController()
+        {
+            this.repository = new RecordRepository();
+        }
+
+        public ReactController(IRecordRepository repository)
+        {
+            this.repository = repository;
+        }
+
 
         // GET: React
         public ActionResult Index()
@@ -58,18 +69,24 @@ namespace IzendaHours.Controllers
             return Json(userRecords, JsonRequestBehavior.AllowGet);
         }
 
-        [HttpPost]
-        public ActionResult AddRecord([Bind(Include = "EntryId,EmployeeId,TaskId,CaseNo,ProjectId,Hours,WikiLink,Notes,RecordDate")] Record record)
+        [ChildActionOnly]
+        public ActionResult _ReactRecordPartial()
         {
-            if (ModelState.IsValid)
-            {
-                var email = User.Identity.GetUserName();
-                var name = email.Split('.');
-                var firstName = name[0];
-                record.EmployeeId = firstName.First().ToString().ToUpper() + firstName.Substring(1);
-                db.Records.Add(record);
-                db.SaveChanges();
-            }
+            ViewBag.ProjectId = new SelectList(db.Projects.OrderBy(model => model.Project1), "ProjectId", "Project1");
+            ViewBag.TaskId = new SelectList(db.Tasks, "TaskId", "Task1");
+            return PartialView();
+        }
+
+        [HttpPost]
+        public ActionResult AddRecord(Record record)
+        {
+            
+            var email = User.Identity.GetUserName();
+            var name = email.Split('.');
+            var firstName = name[0];
+            record.EmployeeId = firstName.First().ToString().ToUpper() + firstName.Substring(1);
+            repository.Insert(record);
+            repository.Save();
     
             ViewBag.ProjectId = new SelectList(db.Projects, "ProjectId", "Project1", record.ProjectId);
             ViewBag.TaskId = new SelectList(db.Tasks, "TaskId", "Task1", record.TaskId);

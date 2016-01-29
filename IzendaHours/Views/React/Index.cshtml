@@ -1,73 +1,18 @@
 ﻿@{
     ViewBag.Title = "React";
+    Layout = "~/Views/Shared/_ReactLayout.cshtml";
 }
-<html>
-<head>
-    <title>Hello React</title>
-    <link rel="stylesheet" type="text/css" href="../../Content/fixed-data-table-base.min.css"/>
-    <style>
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
 
-        th, td {
-            text-align: left;
-            padding: 8px;
-        }
-
-        td {
-            border-bottom: 1px solid #ddd;
-        }
-
-        tr:hover {
-            background-color: #f5f5f5;
-        }
-
-        th {
-            color: #1a6ecc;
-            font-weight: bold;
-            border-bottom: 3px solid #ddd;
-            font-size: x-large;
-        }
-        #hours {
-            text-align: center;
-        }
-
-        #noRecords {
-            padding-top: 15px;
-            text-align: center;
-            color: #8c8c8c;
-            font-size: xx-large;
-        }
-
-        ::-webkit-scrollbar { 
-        height: 10px; 
-        width: 10px; 
-        background-color: #FFF; 
-} 
-
-        ::-webkit-scrollbar-thumb { 
-        background: #a5a5a5; 
-        -webkit-border-radius: 5px; 
-        height: 20px; 
-} 
-
-        ::-webkit-scrollbar-track { 
-        background-color: inherit; 
-}
-    </style>
-</head>
-<body>
-<div style="margin-top: 50px;">
+@*<script type="text/javascript" src="/../../Reporting/rs.aspx?js=report-parts"></script>*@
+@*<div style="margin-top: 50px; width: 1000px;">
     <table id="ReactTable">
-    <thead>
-    <tr>
-        <th>Today's Hours</th>
-    </tr>
-    </thead>
+        <thead>
+        <tr>
+            <th>Today's Hours</th>
+        </tr>
+        </thead>
     </table>
-    <div style="height: 150px; overflow-y: auto;">
+    <div style="height: 150px; width: 1000px; overflow-y: auto;">
         @Html.React("ItemContainer", new
         {
             initialData = Model,
@@ -75,14 +20,18 @@
             pollInterval = 2000
         })
     </div>
-</div>
+</div>*@
 
+@*<div class="row">
+    <div class="col-md-8">
+        <h2>Who Takes Up Most of Our Time?</h2>
+        <div class="report-part" data-report="WeeklyCustomerHours" data-part="chart" data-responseserverpath="/Reporting/rs.aspx"></div>
+    </div>
+    <div class="col-md-4">
+        <h2>Hours Recorded This Week</h2>
+        <div class="report-part" data-report="WeeklyHours" data-part="chart" data-responseserverpath="/Reporting/rs.aspx"></div>
+    </div>
+</div>*@
 
+@*@Scripts.Render("~/bundles/jsx")*@
 
-@Scripts.Render("~/bundles/jsx")
-
-        @Html.ReactInitJavaScript()
-
-</body>
-
-</html>
