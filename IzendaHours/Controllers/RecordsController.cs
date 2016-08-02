@@ -25,12 +25,13 @@ namespace IzendaHours.Controllers
                 var email = User.Identity.GetUserName();
                 var name = email.Split('.');
                 var firstName = name[0];
+                var empId = firstName.First().ToString().ToUpper() + firstName.Substring(1);
                 var records = db.Records.Include(r => r.Project).Include(r => r.Task);
                 if (User.Identity.GetUserName() == "admin")
                 {
                    return View(records.ToList());
                 }
-                return View(records.ToList().Where(user => user.EmployeeId.Contains(firstName.First().ToString().ToUpper() + firstName.Substring(1))));
+                return View(records.ToList().Where(user => user.EmployeeId.Contains(empId)));
             }
             return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
         }
@@ -69,7 +70,7 @@ namespace IzendaHours.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "EntryId,EmployeeId,TaskId,CaseNo,ProjectId,Hours,WikiLink,Notes,RecordDate")] Record record)
+        public ActionResult Create([Bind(Include = "EntryId,EmployeeId,TaskId,CaseNo,ProjectId,Hours,WikiLink,Notes,RecordDate")] Record record, string Command)
         {
             if (ModelState.IsValid)
             {
@@ -79,13 +80,31 @@ namespace IzendaHours.Controllers
                 record.EmployeeId = firstName.First().ToString().ToUpper() + firstName.Substring(1);
                 db.Records.Add(record);
                 db.SaveChanges();
+                if (Command == "Create & New")
+                {
+                    return RedirectToAction("Create");
+                }
                 return RedirectToAction("Index");
             }
 
-            
+
             ViewBag.ProjectId = new SelectList(db.Projects, "ProjectId", "Project1", record.ProjectId);
             ViewBag.TaskId = new SelectList(db.Tasks, "TaskId", "Task1", record.TaskId);
             return View(record);
+        }
+
+        // GET: Records/Create Partial View (Table)
+        [ChildActionOnly]
+        public ActionResult _CreateRecordsTable()
+        {
+            var email = User.Identity.GetUserName();
+            var name = email.Split('.');
+            var firstName = name[0];
+            var records = db.Records.Include(r => r.Project).Include(r => r.Task);
+            var todaysRecords = records.ToList()
+                .Where(user => user.EmployeeId.Contains(firstName.First().ToString().ToUpper() + firstName.Substring(1)))
+                .Where(d => d.RecordDate == DateTime.Today);
+            return PartialView(todaysRecords);
         }
 
         // GET: Records/Edit/5

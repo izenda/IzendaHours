@@ -94,6 +94,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\NHunspell.dll</HintPath>
     </Reference>
+    <Reference Include="RazorEngine, Version=3.4.1.0, Culture=neutral, PublicKeyToken=9ee697374c7e744a, processorArchitecture=MSIL">
+      <HintPath>..\packages\RazorEngine.3.4.1\lib\net45\RazorEngine.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -1837,6 +1841,11 @@
     <Content Include="Views\Shared\_SiteLayout.cshtml" />
     <Content Include="Views\Reporting\Dash.cshtml" />
     <Content Include="Views\Reporting\InstantReportNew.cshtml" />
+    <Content Include="Views\Emails\Web.config" />
+    <Content Include="Views\Account\DisplayEmail.cshtml" />
+    <Content Include="Views\Account\EmailNotConfirmed.cshtml" />
+    <Content Include="Secrets.config" />
+    <Content Include="Views\Records\_CreateRecordsTable.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

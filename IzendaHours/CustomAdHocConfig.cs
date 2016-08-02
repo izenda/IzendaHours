@@ -7,6 +7,8 @@
     using System.IO;
     using Izenda.AdHoc;
     using Izenda.Fusion;
+    using Izenda.AdHoc.Database;
+    using System.Configuration;
 
     [Serializable]
     public class CustomAdHocConfig : DatabaseAdHocConfig
@@ -17,7 +19,8 @@
                 return;
             AdHocSettings.LicenseKey = "IZENDA_LICENSE_KEY";
             AdHocSettings.AdHocConfig = new CustomAdHocConfig();
-            AdHocSettings.SqlServerConnectionString = @"SQL_SERVER_CONNECTION_STRING";
+            AdHocSettings.SqlServerConnectionString = @"MAIN_CONNECTION_STRING";
+            Izenda.Fusion.FusionDriver.AddSqlConnection("FUSION", @"FUSION_CONNECTION_STRING");
             AdHocSettings.GenerateThumbnails = true;
             AdHocSettings.ShowSimpleModeViewer = true;
             AdHocSettings.IdentifiersRegex = "^.*[iI][Dd]$";
@@ -34,19 +37,17 @@
             AdHocSettings.SettingsPageUrl = "Settings";
             AdHocSettings.ParentSettingsUrl = "Settings";
             AdHocSettings.ResponseServer = "rs.aspx";
-            AdHocSettings.ShowSqlEditor = true;
+            AdHocSettings.ShowSqlEditor = false;
             AdHocSettings.ShowJoinAliasTextboxes = true;
             AdHocSettings.ShowJoinDropDown = true;
             AdHocSettings.ShowAdditionalJoinConditions = true;
-            AdHocSettings.VisibleDataSources = new string[] { "Projects", "Records", "Tasks" };
-            AdHocSettings.ReportsPath = Path.Combine(HttpContext.Current.Server.MapPath("~/"), "Reports");
-            //AdHocSettings.PrintMode = PrintMode.Html2PdfAndHtml;
-            AdHocSettings.EvoAzureServiceConfig = new EvoPdfAzureCloudServiceConfig("192.168.1.7", 40001, "password");
 
+            //AdHocSettings.VisibleDataSources = new string[] { "Projects", "Records", "Tasks", "Fogbugz/Bug", "Fogbugz/Project", "Fogbugz/Category", "Fogbugz/TimeInterval", "Fogbugz/TimeIntervalWithHourse", "Fogbugz/Person" };
+
+            //AdHocSettings.ReportsPath = Path.Combine(HttpContext.Current.Server.MapPath("~/"), "Reports");
+            AdHocSettings.EvoAzureServiceConfig = new EvoPdfAzureCloudServiceConfig("127.0.0.1", 40001, "yourpassword");
             AdHocSettings.PdfPrintMode = PdfMode.EvoPdfAzureCloudService;
-
             AdHocSettings.ChartingEngine = ChartingEngine.HtmlChart;
-            
             HttpContext.Current.Session["ReportingInitialized"] = true;
         }
     }

@@ -66,6 +66,7 @@ namespace IzendaHours.Models
     {
         [Required]
         [EmailAddress]
+        [RegularExpression(@"^[a-zA-Z0-9._%+-]+(@izenda\.com)$", ErrorMessage = "Invalid email address.")]
         [Display(Name = "Email")]
         public string Email { get; set; }
 
